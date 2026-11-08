@@ -22,6 +22,8 @@ public:
     void setAmount (float amount01);
     /** Pitch shift in the feedback path, in semitones (−12 … +24). */
     void setPitchSemitones (float semitones);
+    /** Approximate wash RT60 in seconds (0.4 … 12). */
+    void setDecaySeconds (float seconds);
     /** When enabled, longer / airier / wider wash (smoothly morphs). */
     void setEthereal (bool enabled) noexcept;
 
@@ -36,23 +38,27 @@ private:
     static constexpr float kMaxSemitones = 24.0f;
     static constexpr float kMaxPitchRatio = 4.0f;
     static constexpr float kWashMakeup = 1.85f; // audible bloom at modest Amount settings
+    static constexpr float kMinDecaySec = 0.4f;
+    static constexpr float kMaxDecaySec = 12.0f;
+    static constexpr float kDefaultDecaySec = 3.5f;
+    // Mean FDN line length used to map RT60 → per-sample feedback
+    static constexpr float kAvgFdnDelayMs = 67.3f;
+    static constexpr float kMaxFeedback = 0.94f; // hard stability ceiling
 
-    // Normal mode
-    static constexpr float kDecayNormal = 0.88f;
     static constexpr float kPitchFbNormal = 0.48f;
     static constexpr float kDampingHzNormal = 4200.0f;
     static constexpr float kInputHpfHzNormal = 180.0f;
     static constexpr float kWashHpfHzNormal = 220.0f;
     static constexpr float kPreDelayMsNormal = 35.0f;
 
-    // Ethereal / spacey mode — longer & wider, but feedback-stable
-    static constexpr float kDecayEthereal = 0.925f;
+    // Ethereal / spacey mode — wider/airier; decay stays user-controlled
     static constexpr float kPitchFbEthereal = 0.58f;
     static constexpr float kDampingHzEthereal = 5600.0f;
     static constexpr float kInputHpfHzEthereal = 210.0f;
     static constexpr float kWashHpfHzEthereal = 320.0f;
     static constexpr float kPreDelayMsEthereal = 95.0f;
     static constexpr float kMaxPreDelayMs = 120.0f;
+    static constexpr float kEtherealDecayScale = 1.2f; // mild RT stretch when Ethereal is on
 
     struct Diffuser
     {
@@ -76,6 +82,8 @@ private:
     };
 
     static float softClip (float x) noexcept;
+    float feedbackFromDecaySeconds (float seconds) const noexcept;
+    void  refreshDecayTarget() noexcept;
     float processDiffuser (Diffuser& d, float input) noexcept;
     void  processFdn (float inL, float inR, float& outL, float& outR, float decay, float pitchFb) noexcept;
     float pitchShift (float input) noexcept;
@@ -85,6 +93,7 @@ private:
     double sampleRate = 44100.0;
     int numChannels = 2;
     bool etherealEnabled = false;
+    float decaySeconds = kDefaultDecaySec;
 
     std::array<Diffuser, kNumDiffusers> diffL {};
     std::array<Diffuser, kNumDiffusers> diffR {};

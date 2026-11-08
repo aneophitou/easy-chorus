@@ -90,6 +90,10 @@ Use the **in-plugin** preset bar (top row, left of Demo): **`<` / `>`** or the d
 
 Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, High Halo, Musical 1/8, Wide Stereo.
 
+### UI layout
+
+Controls are grouped into **Chorus**, **Delay**, **Shimmer**, and **Output** panels. Each effect column has its On switch, mode toggles, and knobs; Mix / Master sit in Output.
+
 ### Delay / shimmer modes
 
 | Toggle | Default | Role |
@@ -97,7 +101,8 @@ Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dr
 | **Stereo** | Off | Wider dual delay (≈12 ms right offset). Off = linked mono image |
 | **Ping** | Off | Ping-pong cross-feedback (L↔R). Combines with Stereo offset |
 | **Reverse** | Off | Tape-style reverse echoes (overlapping reverse grains) |
-| **Ethereal** | Off | Longer, airier, wider shimmer bloom (optional spacey mode) |
+| **Ethereal** | Off | Airier / wider shimmer bloom (mild RT stretch; Decay still applies) |
+| **Waves** | Off | Tempo-synced swell: delay + shimmer breathe in/out over 2 bars |
 
 Dials have **clickable step marks** around the rim — tap a mark to jump to that value (still drag for fine control).
 
@@ -107,11 +112,12 @@ Dials have **clickable step marks** around the rim — tap a mark to jump to tha
 | --- | --- | --- | --- |
 | Rate | 0.1–4 Hz | 0.70 Hz | Chorus LFO (CE-style) |
 | Depth | 0–100% | 35% | Chorus thickening |
-| Delay | 50–1000 ms | 380 ms | Clean digital echo (covers ~370–400 ms) |
+| Time / Note | 50–1000 ms | 380 ms | Delay time (ms) or musical division |
 | Feedback | 0–85% | 32% | Delay repeats |
-| Shimmer | 0–100% | 5% | Pitch-shifted reverb wash amount |
+| Amount | 0–100% | 25% | Pitch-shifted reverb wash amount |
 | Pitch | −12…+24 st | +12 st | Shimmer feedback pitch (−1 oct … +2 oct) |
-| Ch / Dly / Shim Level | 0–100% | 100% | Independent stage wet amount |
+| Decay | 0.4–12 s | 3.5 s | Shimmer wash length (approx. RT60) |
+| Level (per stage) | 0–100% | 100% | Independent stage wet amount |
 | Mix | 0–100% | 45% | Dry / full wet-chain blend |
 | Master | 0–150% | 100% | Final output level |
 
