@@ -170,36 +170,36 @@ private:
             { "mix", 0.50f }, { "master", 1.0f },
         });
 
-        // Spacey bloom with high sparkles — dry line stays forward
+        // Forward delay + high sparkles; Delay 2 reverse builds a spacey reverse bed into Shimmer 2
         addPreset ("Ethereal Wash", {
             { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 1 },
             { "tempoSync", 0 }, { "bpm", 85 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 1 }, { "delayReverse", 0 },
-            { "rate", 0.36f }, { "depth", 0.30f }, { "delay", 440.0f }, { "feedback", 0.26f },
-            { "shimmer", 0.28f }, { "shimmerPitch", 19.0f }, { "shimmerDecay", 5.5f }, { "shimmerEthereal", 1 },
+            { "rate", 0.36f }, { "depth", 0.28f }, { "delay", 400.0f }, { "feedback", 0.24f },
+            { "shimmer", 0.38f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 5.0f }, { "shimmerEthereal", 1 },
             { "wavesOn", 1 },
-            { "delay2On", 1 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 700.0f }, { "feedback2", 0.16f },
-            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 0.30f },
-            { "shimmer2On", 1 }, { "shimmer2", 0.20f }, { "shimmer2Pitch", 24.0f }, { "shimmer2Decay", 6.5f },
-            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.55f },
-            { "chorusLevel", 0.70f }, { "delayLevel", 0.45f }, { "shimmerLevel", 0.60f },
-            { "mix", 0.38f }, { "master", 1.0f },
+            { "delay2On", 1 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 720.0f }, { "feedback2", 0.32f },
+            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 1 }, { "delay2Level", 0.55f },
+            { "shimmer2On", 1 }, { "shimmer2", 0.34f }, { "shimmer2Pitch", 19.0f }, { "shimmer2Decay", 7.0f },
+            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.70f },
+            { "chorusLevel", 0.65f }, { "delayLevel", 0.40f }, { "shimmerLevel", 0.75f },
+            { "mix", 0.40f }, { "master", 1.0f },
         });
 
-        // Pure high glitter trails — two octave sparkles over a quiet bed
+        // Max high glitter + reverse swell behind the dry line
         addPreset ("Starfield", {
             { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 1 },
             { "tempoSync", 0 }, { "bpm", 90 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
-            { "rate", 0.45f }, { "depth", 0.25f }, { "delay", 380.0f }, { "feedback", 0.20f },
-            { "shimmer", 0.22f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 4.0f }, { "shimmerEthereal", 1 },
+            { "rate", 0.42f }, { "depth", 0.24f }, { "delay", 360.0f }, { "feedback", 0.20f },
+            { "shimmer", 0.42f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 4.5f }, { "shimmerEthereal", 1 },
             { "wavesOn", 1 },
-            { "delay2On", 0 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 500.0f }, { "feedback2", 0.18f },
-            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 0.30f },
-            { "shimmer2On", 1 }, { "shimmer2", 0.18f }, { "shimmer2Pitch", 19.0f }, { "shimmer2Decay", 5.0f },
-            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.50f },
-            { "chorusLevel", 0.55f }, { "delayLevel", 0.35f }, { "shimmerLevel", 0.70f },
-            { "mix", 0.36f }, { "master", 1.0f },
+            { "delay2On", 1 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 780.0f }, { "feedback2", 0.36f },
+            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 1 }, { "delay2Level", 0.60f },
+            { "shimmer2On", 1 }, { "shimmer2", 0.38f }, { "shimmer2Pitch", 24.0f }, { "shimmer2Decay", 6.5f },
+            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.75f },
+            { "chorusLevel", 0.55f }, { "delayLevel", 0.35f }, { "shimmerLevel", 0.80f },
+            { "mix", 0.42f }, { "master", 1.0f },
         });
 
         addPreset ("High Halo", {

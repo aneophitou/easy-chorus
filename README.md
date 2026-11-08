@@ -90,7 +90,7 @@ Use the **in-plugin** preset bar (top row, left of Demo): **`<` / `>`** or the d
 
 Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, Starfield, High Halo, Musical 1/8, Wide Stereo.
 
-**High sparkles / spacey tips:** open the **Shimmer** (and **Shimmer 2**) pages — set **Pitch** to **+19** or **+24**, turn **Ethereal** on, keep **Amount** moderate, and leave **Mix** around 35–45% so the dry line stays clear. Try presets **Starfield** or **Ethereal Wash**.
+**High sparkles + reverse bloom:** set Shimmer **Pitch** to **+24** (and Shimmer 2 to **+19** or **+24**), **Ethereal** on. Use **Delay 2 → Reverse** for a background reverse swell that feeds more sparkle. Keep **Mix** ~40% so the dry guitar stays clear. Try **Starfield** or **Ethereal Wash**.
 
 ### UI layout
 
