@@ -170,20 +170,36 @@ private:
             { "mix", 0.50f }, { "master", 1.0f },
         });
 
-        // Lush bed behind the dry line — audible bloom without burying the guitar
+        // Spacey bloom with high sparkles — dry line stays forward
         addPreset ("Ethereal Wash", {
             { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 1 },
             { "tempoSync", 0 }, { "bpm", 85 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 1 }, { "delayReverse", 0 },
-            { "rate", 0.38f }, { "depth", 0.34f }, { "delay", 460.0f }, { "feedback", 0.28f },
-            { "shimmer", 0.32f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 5.5f }, { "shimmerEthereal", 1 },
+            { "rate", 0.36f }, { "depth", 0.30f }, { "delay", 440.0f }, { "feedback", 0.26f },
+            { "shimmer", 0.28f }, { "shimmerPitch", 19.0f }, { "shimmerDecay", 5.5f }, { "shimmerEthereal", 1 },
             { "wavesOn", 1 },
-            { "delay2On", 1 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 680.0f }, { "feedback2", 0.18f },
-            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 0.35f },
-            { "shimmer2On", 1 }, { "shimmer2", 0.16f }, { "shimmer2Pitch", 19.0f }, { "shimmer2Decay", 6.0f },
-            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.45f },
-            { "chorusLevel", 0.75f }, { "delayLevel", 0.50f }, { "shimmerLevel", 0.65f },
-            { "mix", 0.40f }, { "master", 1.0f },
+            { "delay2On", 1 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 700.0f }, { "feedback2", 0.16f },
+            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 0.30f },
+            { "shimmer2On", 1 }, { "shimmer2", 0.20f }, { "shimmer2Pitch", 24.0f }, { "shimmer2Decay", 6.5f },
+            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.55f },
+            { "chorusLevel", 0.70f }, { "delayLevel", 0.45f }, { "shimmerLevel", 0.60f },
+            { "mix", 0.38f }, { "master", 1.0f },
+        });
+
+        // Pure high glitter trails — two octave sparkles over a quiet bed
+        addPreset ("Starfield", {
+            { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 1 },
+            { "tempoSync", 0 }, { "bpm", 90 }, { "delayMusical", 0 }, { "delayDivision", 3 },
+            { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
+            { "rate", 0.45f }, { "depth", 0.25f }, { "delay", 380.0f }, { "feedback", 0.20f },
+            { "shimmer", 0.22f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 4.0f }, { "shimmerEthereal", 1 },
+            { "wavesOn", 1 },
+            { "delay2On", 0 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 500.0f }, { "feedback2", 0.18f },
+            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 0.30f },
+            { "shimmer2On", 1 }, { "shimmer2", 0.18f }, { "shimmer2Pitch", 19.0f }, { "shimmer2Decay", 5.0f },
+            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.50f },
+            { "chorusLevel", 0.55f }, { "delayLevel", 0.35f }, { "shimmerLevel", 0.70f },
+            { "mix", 0.36f }, { "master", 1.0f },
         });
 
         addPreset ("High Halo", {
@@ -191,9 +207,14 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 380.0f }, { "feedback", 0.20f },
-            { "shimmer", 0.45f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 6.0f }, { "shimmerEthereal", 1 }, { "wavesOn", 0 }, { "delay2On", 0 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 500.0f }, { "feedback2", 0.28f }, { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 1.0f }, { "shimmer2On", 1 }, { "shimmer2", 0.35f }, { "shimmer2Pitch", -5.0f }, { "shimmer2Decay", 4.0f }, { "shimmer2Ethereal", 0 }, { "shimmer2Level", 1.0f },
-            { "chorusLevel", 0.0f }, { "delayLevel", 0.0f }, { "shimmerLevel", 1.0f },
-            { "mix", 0.50f }, { "master", 1.0f },
+            { "shimmer", 0.30f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 5.0f }, { "shimmerEthereal", 1 },
+            { "wavesOn", 1 },
+            { "delay2On", 0 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 500.0f }, { "feedback2", 0.28f },
+            { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 1.0f },
+            { "shimmer2On", 1 }, { "shimmer2", 0.22f }, { "shimmer2Pitch", 19.0f }, { "shimmer2Decay", 6.0f },
+            { "shimmer2Ethereal", 1 }, { "shimmer2Level", 0.55f },
+            { "chorusLevel", 0.0f }, { "delayLevel", 0.0f }, { "shimmerLevel", 0.75f },
+            { "mix", 0.42f }, { "master", 1.0f },
         });
 
         addPreset ("Musical 1/8", {
