@@ -28,6 +28,21 @@ constexpr auto kShimmerDecayId   = "shimmerDecay";
 constexpr auto kChorusLevelId    = "chorusLevel";
 constexpr auto kDelayLevelId     = "delayLevel";
 constexpr auto kShimmerLevelId   = "shimmerLevel";
+constexpr auto kDelay2OnId       = "delay2On";
+constexpr auto kDelay2MusicalId  = "delay2Musical";
+constexpr auto kDelay2DivisionId = "delay2Division";
+constexpr auto kDelay2Id         = "delay2";
+constexpr auto kFeedback2Id      = "feedback2";
+constexpr auto kDelay2StereoId   = "delay2Stereo";
+constexpr auto kDelay2PingPongId = "delay2PingPong";
+constexpr auto kDelay2ReverseId  = "delay2Reverse";
+constexpr auto kDelay2LevelId    = "delay2Level";
+constexpr auto kShimmer2OnId     = "shimmer2On";
+constexpr auto kShimmer2Id       = "shimmer2";
+constexpr auto kShimmer2PitchId  = "shimmer2Pitch";
+constexpr auto kShimmer2DecayId  = "shimmer2Decay";
+constexpr auto kShimmer2EtherealId = "shimmer2Ethereal";
+constexpr auto kShimmer2LevelId  = "shimmer2Level";
 constexpr auto kMixId            = "mix";
 constexpr auto kMasterId         = "master";
 
@@ -173,6 +188,83 @@ juce::AudioProcessorValueTreeState::ParameterLayout EasyChorusAudioProcessor::cr
         1.0f,
         percentAttributes()));
 
+    // --- Layer 2: second delay + shimmer (serial after layer 1) ---
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kDelay2OnId, 1 }, "Delay 2 On", false));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kDelay2MusicalId, 1 }, "Delay 2 Musical", false));
+    params.push_back (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID { kDelay2DivisionId, 1 },
+        "Delay 2 Note",
+        TempoHelpers::delayDivisionLabels(),
+        TempoHelpers::kDefaultDivisionIndex));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kDelay2Id, 1 },
+        "Delay 2",
+        juce::NormalisableRange<float> { 50.0f, 1000.0f, 0.1f, 0.4f },
+        500.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("ms")));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kFeedback2Id, 1 },
+        "Feedback 2",
+        juce::NormalisableRange<float> { 0.0f, 0.85f, 0.001f },
+        0.28f,
+        percentAttributes()));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kDelay2StereoId, 1 }, "Delay 2 Stereo", true));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kDelay2PingPongId, 1 }, "Delay 2 Ping Pong", false));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kDelay2ReverseId, 1 }, "Delay 2 Reverse", false));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kDelay2LevelId, 1 },
+        "Delay 2 Level",
+        juce::NormalisableRange<float> { 0.0f, 1.0f, 0.001f },
+        1.0f,
+        percentAttributes()));
+
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kShimmer2OnId, 1 }, "Shimmer 2 On", false));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kShimmer2Id, 1 },
+        "Shimmer 2",
+        juce::NormalisableRange<float> { 0.0f, 1.0f, 0.001f },
+        0.30f,
+        percentAttributes()));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kShimmer2PitchId, 1 },
+        "Shimmer 2 Pitch",
+        juce::NormalisableRange<float> { -12.0f, 24.0f, 1.0f },
+        7.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("st")
+            .withStringFromValueFunction ([] (float v, int) {
+                const int semis = juce::roundToInt (v);
+                return (semis > 0 ? "+" : "") + juce::String (semis) + " st";
+            })
+            .withValueFromStringFunction ([] (const juce::String& s) {
+                return s.getFloatValue();
+            })));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kShimmer2DecayId, 1 },
+        "Shimmer 2 Decay",
+        juce::NormalisableRange<float> { 0.4f, 12.0f, 0.01f, 0.45f },
+        5.0f,
+        juce::AudioParameterFloatAttributes().withLabel ("s")
+            .withStringFromValueFunction ([] (float v, int) {
+                return juce::String (v, v < 10.0f ? 2 : 1) + " s";
+            })
+            .withValueFromStringFunction ([] (const juce::String& s) {
+                return s.getFloatValue();
+            })));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (
+        juce::ParameterID { kShimmer2EtherealId, 1 }, "Shimmer 2 Ethereal", false));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { kShimmer2LevelId, 1 },
+        "Shimmer 2 Level",
+        juce::NormalisableRange<float> { 0.0f, 1.0f, 0.001f },
+        1.0f,
+        percentAttributes()));
+
     params.push_back (std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { kMixId, 1 },
         "Mix",
@@ -223,6 +315,11 @@ bool EasyChorusAudioProcessor::isDelayMusical() const
     return apvts.getRawParameterValue (kDelayMusicalId)->load() > 0.5f;
 }
 
+bool EasyChorusAudioProcessor::isDelay2Musical() const
+{
+    return apvts.getRawParameterValue (kDelay2MusicalId)->load() > 0.5f;
+}
+
 float EasyChorusAudioProcessor::getEffectiveBpm() const
 {
     const float manual = apvts.getRawParameterValue (kBpmId)->load();
@@ -240,15 +337,25 @@ float EasyChorusAudioProcessor::getEffectiveBpm() const
     return manual;
 }
 
-float EasyChorusAudioProcessor::getCurrentDelayMs() const
+float EasyChorusAudioProcessor::resolveDelayMs (bool musical, const char* delayId, const char* divisionId) const
 {
-    if (isDelayMusical())
+    if (musical)
     {
-        const int division = juce::roundToInt (apvts.getRawParameterValue (kDelayDivisionId)->load());
+        const int division = juce::roundToInt (apvts.getRawParameterValue (divisionId)->load());
         return TempoHelpers::delayMsFromMusical (getEffectiveBpm(), division);
     }
 
-    return apvts.getRawParameterValue (kDelayId)->load();
+    return apvts.getRawParameterValue (delayId)->load();
+}
+
+float EasyChorusAudioProcessor::getCurrentDelayMs() const
+{
+    return resolveDelayMs (isDelayMusical(), kDelayId, kDelayDivisionId);
+}
+
+float EasyChorusAudioProcessor::getCurrentDelay2Ms() const
+{
+    return resolveDelayMs (isDelay2Musical(), kDelay2Id, kDelay2DivisionId);
 }
 
 void EasyChorusAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -260,7 +367,9 @@ void EasyChorusAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     const int channels = getTotalNumOutputChannels();
     chorusEngine.prepare (sampleRate, samplesPerBlock, channels);
     delayEngine.prepare (sampleRate, samplesPerBlock, channels);
+    delayEngine2.prepare (sampleRate, samplesPerBlock, channels);
     shimmerEngine.prepare (sampleRate, samplesPerBlock, channels);
+    shimmerEngine2.prepare (sampleRate, samplesPerBlock, channels);
 
     dryBuffer.setSize (channels, samplesPerBlock, false, false, true);
     stageBuffer.setSize (channels, samplesPerBlock, false, false, true);
@@ -271,12 +380,16 @@ void EasyChorusAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     chorusLevelSmoothed.reset (sampleRate, smoothSec);
     delayLevelSmoothed.reset (sampleRate, smoothSec);
     shimmerLevelSmoothed.reset (sampleRate, smoothSec);
+    delay2LevelSmoothed.reset (sampleRate, smoothSec);
+    shimmer2LevelSmoothed.reset (sampleRate, smoothSec);
     masterSmoothed.reset (sampleRate, smoothSec);
 
     mixSmoothed.setCurrentAndTargetValue (0.45f);
     chorusLevelSmoothed.setCurrentAndTargetValue (1.0f);
     delayLevelSmoothed.setCurrentAndTargetValue (1.0f);
     shimmerLevelSmoothed.setCurrentAndTargetValue (1.0f);
+    delay2LevelSmoothed.setCurrentAndTargetValue (1.0f);
+    shimmer2LevelSmoothed.setCurrentAndTargetValue (1.0f);
     masterSmoothed.setCurrentAndTargetValue (1.0f);
 
     updateEnginesFromParameters();
@@ -286,7 +399,9 @@ void EasyChorusAudioProcessor::releaseResources()
 {
     chorusEngine.reset();
     delayEngine.reset();
+    delayEngine2.reset();
     shimmerEngine.reset();
+    shimmerEngine2.reset();
     demoTone.reset();
     wavesPhase = 0.0f;
 }
@@ -317,14 +432,29 @@ void EasyChorusAudioProcessor::updateEnginesFromParameters()
     delayEngine.setStereo (apvts.getRawParameterValue (kDelayStereoId)->load() > 0.5f);
     delayEngine.setPingPong (apvts.getRawParameterValue (kDelayPingPongId)->load() > 0.5f);
     delayEngine.setReverse (apvts.getRawParameterValue (kDelayReverseId)->load() > 0.5f);
+
     shimmerEngine.setAmount (apvts.getRawParameterValue (kShimmerId)->load());
     shimmerEngine.setPitchSemitones (apvts.getRawParameterValue (kShimmerPitchId)->load());
     shimmerEngine.setDecaySeconds (apvts.getRawParameterValue (kShimmerDecayId)->load());
     shimmerEngine.setEthereal (apvts.getRawParameterValue (kShimmerEtherealId)->load() > 0.5f);
+
+    delayEngine2.setDelayMs (getCurrentDelay2Ms());
+    delayEngine2.setFeedback (apvts.getRawParameterValue (kFeedback2Id)->load());
+    delayEngine2.setStereo (apvts.getRawParameterValue (kDelay2StereoId)->load() > 0.5f);
+    delayEngine2.setPingPong (apvts.getRawParameterValue (kDelay2PingPongId)->load() > 0.5f);
+    delayEngine2.setReverse (apvts.getRawParameterValue (kDelay2ReverseId)->load() > 0.5f);
+
+    shimmerEngine2.setAmount (apvts.getRawParameterValue (kShimmer2Id)->load());
+    shimmerEngine2.setPitchSemitones (apvts.getRawParameterValue (kShimmer2PitchId)->load());
+    shimmerEngine2.setDecaySeconds (apvts.getRawParameterValue (kShimmer2DecayId)->load());
+    shimmerEngine2.setEthereal (apvts.getRawParameterValue (kShimmer2EtherealId)->load() > 0.5f);
+
     mixSmoothed.setTargetValue (apvts.getRawParameterValue (kMixId)->load());
     chorusLevelSmoothed.setTargetValue (apvts.getRawParameterValue (kChorusLevelId)->load());
     delayLevelSmoothed.setTargetValue (apvts.getRawParameterValue (kDelayLevelId)->load());
     shimmerLevelSmoothed.setTargetValue (apvts.getRawParameterValue (kShimmerLevelId)->load());
+    delay2LevelSmoothed.setTargetValue (apvts.getRawParameterValue (kDelay2LevelId)->load());
+    shimmer2LevelSmoothed.setTargetValue (apvts.getRawParameterValue (kShimmer2LevelId)->load());
     masterSmoothed.setTargetValue (apvts.getRawParameterValue (kMasterId)->load());
 }
 
@@ -350,10 +480,12 @@ void EasyChorusAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (int ch = 0; ch < numChannels; ++ch)
         dryBuffer.copyFrom (ch, 0, buffer, ch, 0, numSamples);
 
-    const bool chorusOn  = apvts.getRawParameterValue (kChorusOnId)->load() > 0.5f;
-    const bool delayOn   = apvts.getRawParameterValue (kDelayOnId)->load() > 0.5f;
-    const bool shimmerOn = apvts.getRawParameterValue (kShimmerOnId)->load() > 0.5f;
-    const bool wavesOn   = apvts.getRawParameterValue (kWavesOnId)->load() > 0.5f;
+    const bool chorusOn   = apvts.getRawParameterValue (kChorusOnId)->load() > 0.5f;
+    const bool delayOn    = apvts.getRawParameterValue (kDelayOnId)->load() > 0.5f;
+    const bool shimmerOn  = apvts.getRawParameterValue (kShimmerOnId)->load() > 0.5f;
+    const bool delay2On   = apvts.getRawParameterValue (kDelay2OnId)->load() > 0.5f;
+    const bool shimmer2On = apvts.getRawParameterValue (kShimmer2OnId)->load() > 0.5f;
+    const bool wavesOn    = apvts.getRawParameterValue (kWavesOnId)->load() > 0.5f;
 
     // Tempo-synced swell for delay + shimmer (2 bars @ effective BPM)
     if (wavesOn)
@@ -430,6 +562,30 @@ void EasyChorusAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     else
     {
         shimmerLevelSmoothed.skip (numSamples);
+    }
+
+    if (delay2On)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            stageBuffer.copyFrom (ch, 0, buffer, ch, 0, numSamples);
+        delayEngine2.process (buffer);
+        applyStageLevel (delay2LevelSmoothed, true);
+    }
+    else
+    {
+        delay2LevelSmoothed.skip (numSamples);
+    }
+
+    if (shimmer2On)
+    {
+        for (int ch = 0; ch < numChannels; ++ch)
+            stageBuffer.copyFrom (ch, 0, buffer, ch, 0, numSamples);
+        shimmerEngine2.process (buffer);
+        applyStageLevel (shimmer2LevelSmoothed, true);
+    }
+    else
+    {
+        shimmer2LevelSmoothed.skip (numSamples);
     }
 
     for (int i = 0; i < numSamples; ++i)
