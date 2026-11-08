@@ -88,15 +88,16 @@ When a section is off, that DSP block is **skipped** (not merely amount=0). Solo
 
 Use the **in-plugin** preset bar (top row, left of Demo): **`<` / `>`** or the dropdown — no Options menu needed.
 
-Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, Starfield, High Halo, Musical 1/8, Wide Stereo.
+Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, Starfield, High Halo, Musical 1/8, Wide Stereo, plus **Synth Bow**, **Plate Bloom**, **Spring Well**, and **Room Sustain** (E-Bow / Reverb).
 
 **High sparkles + reverse bloom:** **Ethereal** on, Shimmer **Pitch** around **+19…+24** (Shimmer 2 often lower, e.g. **+12…+19**). High pitches self-soften in the feedback path so they don’t scream. Use **Delay 2 → Reverse** for a background reverse swell. Keep **Mix** ~38% so the dry guitar stays clear. Try **Starfield** or **Ethereal Wash**.
 
 ### UI layout
 
-One effect page at a time via the top tabs (**Chorus / Delay / Shimmer / Delay 2 / Shimmer 2**), with large knobs and toggles.
+One effect page at a time via the top tabs (**E-Bow / Chorus / Delay / Shimmer / Delay 2 / Shimmer 2 / Reverb**), with large knobs and toggles.
+Use **Earlier / Later** on each page to reorder the serial chain.
 **Output** (Waves, Mix, Master) stays visible under every page.
-Signal path is serial: Chorus → Delay → Shimmer → Delay 2 → Shimmer 2 → Mix/Master.
+Default path: E-Bow → Chorus → Delay → Shimmer → Delay 2 → Shimmer 2 → Reverb → Mix/Master.
 
 ### Delay / shimmer modes
 
