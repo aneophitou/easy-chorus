@@ -115,7 +115,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.70f }, { "depth", 0.35f }, { "delay", 380.0f }, { "feedback", 0.32f },
-            { "shimmer", 0.25f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.25f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 1.0f }, { "delayLevel", 1.0f }, { "shimmerLevel", 1.0f },
             { "mix", 0.45f }, { "master", 1.0f },
         });
@@ -125,7 +125,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.55f }, { "depth", 0.48f }, { "delay", 380.0f }, { "feedback", 0.20f },
-            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 1.0f }, { "delayLevel", 0.0f }, { "shimmerLevel", 0.0f },
             { "mix", 0.55f }, { "master", 1.0f },
         });
@@ -135,7 +135,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 420.0f }, { "feedback", 0.42f },
-            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 0.0f }, { "delayLevel", 1.0f }, { "shimmerLevel", 0.0f },
             { "mix", 0.40f }, { "master", 1.0f },
         });
@@ -145,7 +145,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 1 }, { "delayDivision", 6 },
             { "delayStereo", 1 }, { "delayPingPong", 1 }, { "delayReverse", 0 },
             { "rate", 0.65f }, { "depth", 0.30f }, { "delay", 380.0f }, { "feedback", 0.48f },
-            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 0.70f }, { "delayLevel", 1.0f }, { "shimmerLevel", 0.0f },
             { "mix", 0.50f }, { "master", 1.0f },
         });
@@ -155,7 +155,7 @@ private:
             { "tempoSync", 0 }, { "bpm", 95 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 1 },
             { "rate", 0.40f }, { "depth", 0.40f }, { "delay", 600.0f }, { "feedback", 0.38f },
-            { "shimmer", 0.08f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.08f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 4.0f }, { "shimmerEthereal", 0 }, { "wavesOn", 1 },
             { "chorusLevel", 0.60f }, { "delayLevel", 1.0f }, { "shimmerLevel", 0.50f },
             { "mix", 0.55f }, { "master", 1.0f },
         });
@@ -165,7 +165,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 110 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.50f }, { "depth", 0.28f }, { "delay", 320.0f }, { "feedback", 0.28f },
-            { "shimmer", 0.35f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.35f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 4.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 0.70f }, { "delayLevel", 0.65f }, { "shimmerLevel", 1.0f },
             { "mix", 0.50f }, { "master", 1.0f },
         });
@@ -175,7 +175,7 @@ private:
             { "tempoSync", 0 }, { "bpm", 85 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 1 }, { "delayReverse", 0 },
             { "rate", 0.35f }, { "depth", 0.32f }, { "delay", 500.0f }, { "feedback", 0.35f },
-            { "shimmer", 0.55f }, { "shimmerPitch", 19.0f }, { "shimmerEthereal", 1 },
+            { "shimmer", 0.55f }, { "shimmerPitch", 19.0f }, { "shimmerDecay", 7.0f }, { "shimmerEthereal", 1 }, { "wavesOn", 1 },
             { "chorusLevel", 0.55f }, { "delayLevel", 0.55f }, { "shimmerLevel", 1.0f },
             { "mix", 0.60f }, { "master", 0.95f },
         });
@@ -185,7 +185,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 380.0f }, { "feedback", 0.20f },
-            { "shimmer", 0.45f }, { "shimmerPitch", 24.0f }, { "shimmerEthereal", 1 },
+            { "shimmer", 0.45f }, { "shimmerPitch", 24.0f }, { "shimmerDecay", 6.0f }, { "shimmerEthereal", 1 }, { "wavesOn", 0 },
             { "chorusLevel", 0.0f }, { "delayLevel", 0.0f }, { "shimmerLevel", 1.0f },
             { "mix", 0.50f }, { "master", 1.0f },
         });
@@ -195,7 +195,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 140 }, { "delayMusical", 1 }, { "delayDivision", 6 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.80f }, { "depth", 0.30f }, { "delay", 380.0f }, { "feedback", 0.30f },
-            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 0.85f }, { "delayLevel", 0.90f }, { "shimmerLevel", 0.0f },
             { "mix", 0.45f }, { "master", 1.0f },
         });
@@ -205,7 +205,7 @@ private:
             { "tempoSync", 1 }, { "bpm", 100 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.60f }, { "depth", 0.42f }, { "delay", 280.0f }, { "feedback", 0.25f },
-            { "shimmer", 0.18f }, { "shimmerPitch", 7.0f }, { "shimmerEthereal", 0 },
+            { "shimmer", 0.18f }, { "shimmerPitch", 7.0f }, { "shimmerDecay", 3.0f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 },
             { "chorusLevel", 1.0f }, { "delayLevel", 0.75f }, { "shimmerLevel", 0.70f },
             { "mix", 0.48f }, { "master", 1.0f },
         });
