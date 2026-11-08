@@ -92,9 +92,9 @@ Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dr
 
 ### UI layout
 
-Controls are grouped into **Chorus**, **Delay**, **Shimmer**, **Delay 2**, **Shimmer 2**, and **Output** panels.
+One effect page at a time via the top tabs (**Chorus / Delay / Shimmer / Delay 2 / Shimmer 2**), with large knobs and toggles.
+**Output** (Waves, Mix, Master) stays visible under every page.
 Signal path is serial: Chorus → Delay → Shimmer → Delay 2 → Shimmer 2 → Mix/Master.
-Each effect column has its On switch, mode toggles, and knobs; **Waves** / Mix / Master sit in Output.
 
 ### Delay / shimmer modes
 
