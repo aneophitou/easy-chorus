@@ -48,7 +48,8 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
     }
 
     grainLengthSamples = juce::jmax (64.0f, kGrainMs * 0.001f * (float) sampleRate);
-    pitchDelaySize = juce::jmax (256, (int) std::ceil (grainLengthSamples * kPitchRatio) + 64);
+    // Size for the highest pitch ratio so +24 st never overruns the delay
+    pitchDelaySize = juce::jmax (256, (int) std::ceil (grainLengthSamples * kMaxPitchRatio) + 64);
     pitchDelay.assign ((size_t) pitchDelaySize, 0.0f);
     pitchWrite = 0;
 
@@ -66,6 +67,8 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
 
     amountSmoothed.reset (sampleRate, 0.05f);
     amountSmoothed.setCurrentAndTargetValue (0.05f);
+    pitchRatioSmoothed.reset (sampleRate, 0.08f);
+    pitchRatioSmoothed.setCurrentAndTargetValue (2.0f); // +12 st default
 
     reset();
 }
@@ -108,6 +111,13 @@ void ShimmerEngine::reset()
 void ShimmerEngine::setAmount (float amount01)
 {
     amountSmoothed.setTargetValue (juce::jlimit (0.0f, 1.0f, amount01));
+}
+
+void ShimmerEngine::setPitchSemitones (float semitones)
+{
+    const float semis = juce::jlimit (kMinSemitones, kMaxSemitones, semitones);
+    const float ratio = std::pow (2.0f, semis / 12.0f);
+    pitchRatioSmoothed.setTargetValue (juce::jlimit (0.5f, kMaxPitchRatio, ratio));
 }
 
 float ShimmerEngine::processDiffuser (Diffuser& d, float input) noexcept
@@ -153,6 +163,8 @@ float ShimmerEngine::pitchShift (float input) noexcept
 {
     pitchDelay[(size_t) pitchWrite] = input;
 
+    const float pitchRatio = pitchRatioSmoothed.getNextValue();
+
     float shifted = 0.0f;
     float windowSum = 0.0f;
 
@@ -160,8 +172,8 @@ float ShimmerEngine::pitchShift (float input) noexcept
     {
         const float window = hann (grain.phase);
         const float age = grain.phase * grainLengthSamples;
-        // Read faster than write → +1 octave; long Hann grains keep it smooth
-        const float readPos = (float) pitchWrite - age * kPitchRatio;
+        // ratio > 1 reads faster (up); ratio < 1 reads slower (down)
+        const float readPos = (float) pitchWrite - age * pitchRatio;
         shifted += grainRead (readPos) * window;
         windowSum += window;
 
