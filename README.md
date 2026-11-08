@@ -75,6 +75,25 @@ Enable **Demo** in Standalone when you have no guitar/mic (Options → output de
 
 When a section is off, that DSP block is **skipped** (not merely amount=0). Solo Delay or solo Shimmer works with the others off.
 
+### Tempo / delay timing
+
+| Control | Role |
+| --- | --- |
+| **Sync** | Use the DAW/host BPM when available (falls back to manual BPM in Standalone) |
+| **BPM** | Manual tempo (40–240) when Sync is off; shows host BPM when Sync is on |
+| **Musical** | Delay uses note divisions instead of milliseconds |
+| **Note / Delay** | Free mode: ms. Musical mode: `1/1` … `1/16` (incl. dotted / triplets) |
+
+### Delay modes
+
+| Toggle | Default | Role |
+| --- | --- | --- |
+| **Stereo** | Off | Wider dual delay (≈12 ms right offset). Off = linked mono image |
+| **Ping** | Off | Ping-pong cross-feedback (L↔R). Combines with Stereo offset |
+| **Reverse** | Off | Tape-style reverse echoes (overlapping reverse grains) |
+
+Dials have **clickable step marks** around the rim — tap a mark to jump to that value (still drag for fine control).
+
 ### Knobs
 
 | Control | Range | Default | Role |
@@ -84,6 +103,7 @@ When a section is off, that DSP block is **skipped** (not merely amount=0). Solo
 | Delay | 50–1000 ms | 380 ms | Clean digital echo (covers ~370–400 ms) |
 | Feedback | 0–85% | 32% | Delay repeats |
 | Shimmer | 0–100% | 5% | Pitch-shifted reverb wash amount |
+| Pitch | −12…+24 st | +12 st | Shimmer feedback pitch (−1 oct … +2 oct) |
 | Mix | 0–100% | 45% | Dry / full wet-chain blend |
 
 Chorus voices are fixed at **2** in v1 (no Voices knob).
