@@ -17,6 +17,15 @@ public:
     void resized() override;
 
 private:
+    enum class Page
+    {
+        chorus = 0,
+        delay,
+        shimmer,
+        delay2,
+        shimmer2
+    };
+
     struct Knob
     {
         juce::Component  dialHost;
@@ -29,29 +38,31 @@ private:
 
     void timerCallback() override;
 
+    void setActivePage (Page page);
+    void updatePageVisibility();
+
     void layoutPresetBar (juce::Rectangle<int> bounds);
-    void layoutChorusColumn (juce::Rectangle<int> bounds);
-    void layoutDelayColumn (juce::Rectangle<int> bounds, bool isSecond);
-    void layoutShimmerColumn (juce::Rectangle<int> bounds, bool isSecond);
-    void layoutOutputColumn (juce::Rectangle<int> bounds);
+    void layoutPageTabs (juce::Rectangle<int> bounds);
+    void layoutActivePage (juce::Rectangle<int> bounds);
+    void layoutChorusPage (juce::Rectangle<int> bounds);
+    void layoutDelayPage (juce::Rectangle<int> bounds, bool isSecond);
+    void layoutShimmerPage (juce::Rectangle<int> bounds, bool isSecond);
+    void layoutOutputBar (juce::Rectangle<int> bounds);
     void layoutToggleRow (juce::Rectangle<int> bounds,
                           juce::TextButton* const* toggles,
                           int count,
                           int gap);
-    void layoutKnobStack (juce::Rectangle<int> bounds,
-                          Knob* const* knobs,
-                          int count);
+    void layoutKnobRow (juce::Rectangle<int> bounds,
+                        Knob* const* knobs,
+                        int count);
     void layoutOneKnob (Knob& knob, juce::Rectangle<int> cell);
-
-    void paintSectionPanel (juce::Graphics& g,
-                            juce::Rectangle<float> bounds,
-                            const juce::String& title) const;
 
     void refreshToggleLook (juce::TextButton& button, bool isOn);
     void refreshDemoLook();
     void refreshTempoLooks();
     void refreshModeLooks();
     void refreshPresetLook();
+    void refreshPageTabLooks();
     void rebindDelayKnob (bool isSecond);
     void updateBpmInteraction();
     void updateDelayValueLabel (bool isSecond);
@@ -80,7 +91,15 @@ private:
 
     EasyChorusAudioProcessor& audioProcessor;
 
+    Page activePage = Page::chorus;
+
     juce::TextButton demoToggle { "Demo" };
+    juce::TextButton pageChorusTab { "Chorus" };
+    juce::TextButton pageDelayTab { "Delay" };
+    juce::TextButton pageShimmerTab { "Shimmer" };
+    juce::TextButton pageDelay2Tab { "Delay 2" };
+    juce::TextButton pageShimmer2Tab { "Shimmer 2" };
+
     juce::TextButton chorusToggle { "On" };
     juce::TextButton delayToggle  { "On" };
     juce::TextButton shimmerToggle { "On" };
@@ -143,11 +162,7 @@ private:
     Knob mixKnob;
     Knob masterKnob;
 
-    juce::Rectangle<float> chorusPanelBounds;
-    juce::Rectangle<float> delayPanelBounds;
-    juce::Rectangle<float> shimmerPanelBounds;
-    juce::Rectangle<float> delay2PanelBounds;
-    juce::Rectangle<float> shimmer2PanelBounds;
+    juce::Rectangle<float> contentPanelBounds;
     juce::Rectangle<float> outputPanelBounds;
 
     bool delayKnobMusical = false;
