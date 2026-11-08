@@ -7,9 +7,10 @@
 /**
  * Valhalla Shimmer–inspired pitch-shifted reverb wash (original DSP).
  *
- * Dense FDN diffusion with feedback through a +12 semitone pitch shifter,
- * damping in the loop, soft bloom / long ethereal tail. The Shimmer amount
- * blends this wash behind the dry-through wet-chain signal.
+ * Dense FDN diffusion with feedback through a configurable pitch shifter
+ * (default +12 semitones). Optional Ethereal mode lengthens the bloom,
+ * lifts the air band, widens the image, and pushes more pitched feedback
+ * for a spacier cloud.
  */
 class ShimmerEngine
 {
@@ -20,6 +21,10 @@ public:
     void reset();
 
     void setAmount (float amount01);
+    /** Pitch shift in the feedback path, in semitones (−12 … +24). */
+    void setPitchSemitones (float semitones);
+    /** When enabled, longer / airier / wider wash (smoothly morphs). */
+    void setEthereal (bool enabled) noexcept;
 
     void process (juce::AudioBuffer<float>& buffer);
 
@@ -27,22 +32,34 @@ private:
     static constexpr int kNumDiffusers = 4;
     static constexpr int kFdnSize = 8;
     static constexpr int kNumGrains = 3;
-    static constexpr float kPitchRatio = 2.0f; // +12 semitones
-    static constexpr float kGrainMs = 90.0f;   // long grains → less robotic
+    static constexpr float kGrainMs = 90.0f;
+    static constexpr float kMinSemitones = -12.0f;
+    static constexpr float kMaxSemitones = 24.0f;
+    static constexpr float kMaxPitchRatio = 4.0f;
 
-    // Fixed v1 “size/color” defaults (Valhalla-like bloom)
-    static constexpr float kDecay = 0.88f;         // long tail
-    static constexpr float kPitchFeedback = 0.55f; // how hard the octave feeds the cloud
-    static constexpr float kDampingHz = 4200.0f;   // HF damping in FDN
-    static constexpr float kInputHpfHz = 180.0f;   // keep guitar low end clean
-    static constexpr float kWashHpfHz = 250.0f;    // airy wash, less mud
+    // Normal mode
+    static constexpr float kDecayNormal = 0.88f;
+    static constexpr float kPitchFbNormal = 0.55f;
+    static constexpr float kDampingHzNormal = 4200.0f;
+    static constexpr float kInputHpfHzNormal = 180.0f;
+    static constexpr float kWashHpfHzNormal = 250.0f;
+    static constexpr float kPreDelayMsNormal = 35.0f;
+
+    // Ethereal / spacey mode
+    static constexpr float kDecayEthereal = 0.955f;
+    static constexpr float kPitchFbEthereal = 0.78f;
+    static constexpr float kDampingHzEthereal = 6800.0f; // brighter air in the loop
+    static constexpr float kInputHpfHzEthereal = 240.0f;
+    static constexpr float kWashHpfHzEthereal = 480.0f;  // thinner, floatier wash
+    static constexpr float kPreDelayMsEthereal = 110.0f;
+    static constexpr float kMaxPreDelayMs = 120.0f;
 
     struct Diffuser
     {
         std::vector<float> buffer;
         int index = 0;
         int size = 1;
-        float z = 0.0f; // one-pole for mild smoothing
+        float z = 0.0f;
     };
 
     struct FdnLine
@@ -59,36 +76,45 @@ private:
     };
 
     float processDiffuser (Diffuser& d, float input) noexcept;
-    void  processFdn (float inL, float inR, float& outL, float& outR) noexcept;
+    void  processFdn (float inL, float inR, float& outL, float& outR, float decay, float pitchFb) noexcept;
     float pitchShift (float input) noexcept;
     float grainRead (float readPos) const noexcept;
+    void  updateModeTargets() noexcept;
 
     double sampleRate = 44100.0;
     int numChannels = 2;
+    bool etherealEnabled = false;
 
     std::array<Diffuser, kNumDiffusers> diffL {};
     std::array<Diffuser, kNumDiffusers> diffR {};
     std::array<FdnLine, kFdnSize> fdn {};
 
-    // Mono pitch-shift delay used in the feedback path
     std::vector<float> pitchDelay;
     int pitchDelaySize = 0;
     int pitchWrite = 0;
     float grainLengthSamples = 1.0f;
     std::array<Grain, kNumGrains> grains {};
 
-    float dampCoeff = 0.0f;
-    float inputHpCoeff = 0.0f;
-    float washHpCoeff = 0.0f;
     float pitchLpState = 0.0f;
     std::array<float, 2> inputHpState { 0.0f, 0.0f };
     std::array<float, 2> washHpState { 0.0f, 0.0f };
 
-    // Soft pre-delay into the cloud (~35 ms) for bloom onset
+    // Max-sized pre-delay; read length morphs with ethereal
     std::vector<float> preDelayL;
     std::vector<float> preDelayR;
     int preDelaySize = 0;
-    int preDelayIndex = 0;
+    int preDelayWrite = 0;
+
+    // Slow stereo drift for ethereal width
+    float spaceLfoPhase = 0.0f;
 
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> amountSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> pitchRatioSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> etherealSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> decaySmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> pitchFbSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> dampCoeffSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> inputHpCoeffSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> washHpCoeffSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> preDelaySamplesSmoothed;
 };

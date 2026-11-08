@@ -43,6 +43,9 @@ target_sources(EasyChorus
         Source/dsp/ShimmerEngine.cpp
 )
 
+target_include_directories(EasyChorus PRIVATE Source)
+
+
 target_compile_definitions(EasyChorus
     PUBLIC
         JUCE_WEB_BROWSER=0
