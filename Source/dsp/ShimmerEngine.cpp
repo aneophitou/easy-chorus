@@ -13,6 +13,11 @@ int msToSamples (double sampleRate, float ms) noexcept
     return juce::jmax (2, (int) std::round (sampleRate * (double) ms * 0.001));
 }
 
+float onePoleCoeff (double sampleRate, float hz) noexcept
+{
+    return 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * hz / (float) sampleRate);
+}
+
 // Prime-ish diffuser / FDN lengths (ms) for dense, non-metallic bloom
 constexpr float kDiffMs[4] = { 7.1f, 11.3f, 17.9f, 23.7f };
 constexpr float kFdnMs[8]  = { 29.3f, 37.1f, 47.9f, 58.3f, 71.9f, 83.7f, 97.1f, 113.3f };
@@ -25,18 +30,16 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
 
     for (int i = 0; i < kNumDiffusers; ++i)
     {
-        auto setup = [&] (Diffuser& d)
+        auto setup = [&] (Diffuser& d, float ms)
         {
-            d.size = msToSamples (sampleRate, kDiffMs[i]);
+            d.size = msToSamples (sampleRate, ms);
             d.buffer.assign ((size_t) d.size, 0.0f);
             d.index = 0;
             d.z = 0.0f;
         };
-        setup (diffL[(size_t) i]);
-        setup (diffR[(size_t) i]);
-        // Slight L/R length skew for width without phase collapse
-        diffR[(size_t) i].size = msToSamples (sampleRate, kDiffMs[i] * 1.07f);
-        diffR[(size_t) i].buffer.assign ((size_t) diffR[(size_t) i].size, 0.0f);
+        setup (diffL[(size_t) i], kDiffMs[i]);
+        // Wider L/R skew ready for ethereal decorrelation
+        setup (diffR[(size_t) i], kDiffMs[i] * 1.13f);
     }
 
     for (int i = 0; i < kFdnSize; ++i)
@@ -48,24 +51,41 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
     }
 
     grainLengthSamples = juce::jmax (64.0f, kGrainMs * 0.001f * (float) sampleRate);
-    pitchDelaySize = juce::jmax (256, (int) std::ceil (grainLengthSamples * kPitchRatio) + 64);
+    pitchDelaySize = juce::jmax (256, (int) std::ceil (grainLengthSamples * kMaxPitchRatio) + 64);
     pitchDelay.assign ((size_t) pitchDelaySize, 0.0f);
     pitchWrite = 0;
 
     for (int g = 0; g < kNumGrains; ++g)
         grains[(size_t) g].phase = (float) g / (float) kNumGrains;
 
-    preDelaySize = msToSamples (sampleRate, 35.0f);
+    preDelaySize = msToSamples (sampleRate, kMaxPreDelayMs);
     preDelayL.assign ((size_t) preDelaySize, 0.0f);
     preDelayR.assign ((size_t) preDelaySize, 0.0f);
-    preDelayIndex = 0;
+    preDelayWrite = 0;
+    spaceLfoPhase = 0.0f;
 
-    dampCoeff = 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * kDampingHz / (float) sampleRate);
-    inputHpCoeff = 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * kInputHpfHz / (float) sampleRate);
-    washHpCoeff = 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * kWashHpfHz / (float) sampleRate);
-
+    const float smoothSec = 0.12f; // gentle morph into ethereal
     amountSmoothed.reset (sampleRate, 0.05f);
     amountSmoothed.setCurrentAndTargetValue (0.05f);
+    pitchRatioSmoothed.reset (sampleRate, 0.08f);
+    pitchRatioSmoothed.setCurrentAndTargetValue (2.0f);
+    etherealSmoothed.reset (sampleRate, smoothSec);
+    etherealSmoothed.setCurrentAndTargetValue (0.0f);
+    decaySmoothed.reset (sampleRate, smoothSec);
+    pitchFbSmoothed.reset (sampleRate, smoothSec);
+    dampCoeffSmoothed.reset (sampleRate, smoothSec);
+    inputHpCoeffSmoothed.reset (sampleRate, smoothSec);
+    washHpCoeffSmoothed.reset (sampleRate, smoothSec);
+    preDelaySamplesSmoothed.reset (sampleRate, smoothSec);
+
+    etherealEnabled = false;
+    updateModeTargets();
+    decaySmoothed.setCurrentAndTargetValue (decaySmoothed.getTargetValue());
+    pitchFbSmoothed.setCurrentAndTargetValue (pitchFbSmoothed.getTargetValue());
+    dampCoeffSmoothed.setCurrentAndTargetValue (dampCoeffSmoothed.getTargetValue());
+    inputHpCoeffSmoothed.setCurrentAndTargetValue (inputHpCoeffSmoothed.getTargetValue());
+    washHpCoeffSmoothed.setCurrentAndTargetValue (washHpCoeffSmoothed.getTargetValue());
+    preDelaySamplesSmoothed.setCurrentAndTargetValue (preDelaySamplesSmoothed.getTargetValue());
 
     reset();
 }
@@ -98,11 +118,12 @@ void ShimmerEngine::reset()
 
     std::fill (preDelayL.begin(), preDelayL.end(), 0.0f);
     std::fill (preDelayR.begin(), preDelayR.end(), 0.0f);
-    preDelayIndex = 0;
+    preDelayWrite = 0;
 
     inputHpState = { 0.0f, 0.0f };
     washHpState = { 0.0f, 0.0f };
     pitchLpState = 0.0f;
+    spaceLfoPhase = 0.0f;
 }
 
 void ShimmerEngine::setAmount (float amount01)
@@ -110,16 +131,43 @@ void ShimmerEngine::setAmount (float amount01)
     amountSmoothed.setTargetValue (juce::jlimit (0.0f, 1.0f, amount01));
 }
 
+void ShimmerEngine::setPitchSemitones (float semitones)
+{
+    const float semis = juce::jlimit (kMinSemitones, kMaxSemitones, semitones);
+    const float ratio = std::pow (2.0f, semis / 12.0f);
+    pitchRatioSmoothed.setTargetValue (juce::jlimit (0.5f, kMaxPitchRatio, ratio));
+}
+
+void ShimmerEngine::setEthereal (bool enabled) noexcept
+{
+    etherealEnabled = enabled;
+    updateModeTargets();
+}
+
+void ShimmerEngine::updateModeTargets() noexcept
+{
+    etherealSmoothed.setTargetValue (etherealEnabled ? 1.0f : 0.0f);
+
+    const float e = etherealEnabled ? 1.0f : 0.0f;
+    auto lerp = [e] (float a, float b) { return a + (b - a) * e; };
+
+    decaySmoothed.setTargetValue (lerp (kDecayNormal, kDecayEthereal));
+    pitchFbSmoothed.setTargetValue (lerp (kPitchFbNormal, kPitchFbEthereal));
+    dampCoeffSmoothed.setTargetValue (onePoleCoeff (sampleRate, lerp (kDampingHzNormal, kDampingHzEthereal)));
+    inputHpCoeffSmoothed.setTargetValue (onePoleCoeff (sampleRate, lerp (kInputHpfHzNormal, kInputHpfHzEthereal)));
+    washHpCoeffSmoothed.setTargetValue (onePoleCoeff (sampleRate, lerp (kWashHpfHzNormal, kWashHpfHzEthereal)));
+    preDelaySamplesSmoothed.setTargetValue (
+        lerp (kPreDelayMsNormal, kPreDelayMsEthereal) * 0.001f * (float) sampleRate);
+}
+
 float ShimmerEngine::processDiffuser (Diffuser& d, float input) noexcept
 {
-    // Schroeder-style allpass diffuser
     constexpr float g = 0.6f;
     const float bufOut = d.buffer[(size_t) d.index];
     const float y = -g * input + bufOut;
     d.buffer[(size_t) d.index] = input + g * bufOut;
     d.index = (d.index + 1) % d.size;
 
-    // Tiny one-pole to soften diffuser edges
     d.z += 0.35f * (y - d.z);
     return d.z;
 }
@@ -135,7 +183,6 @@ float ShimmerEngine::grainRead (float readPos) const noexcept
     const float frac = readPos - (float) i0;
     const int i1 = (i0 + 1) % pitchDelaySize;
 
-    // Hermite-ish 2-point with mild cubic flavor via neighboring taps
     const int im1 = (i0 - 1 + pitchDelaySize) % pitchDelaySize;
     const int i2  = (i0 + 2) % pitchDelaySize;
     const float y0 = pitchDelay[(size_t) im1];
@@ -153,6 +200,8 @@ float ShimmerEngine::pitchShift (float input) noexcept
 {
     pitchDelay[(size_t) pitchWrite] = input;
 
+    const float pitchRatio = pitchRatioSmoothed.getNextValue();
+
     float shifted = 0.0f;
     float windowSum = 0.0f;
 
@@ -160,8 +209,7 @@ float ShimmerEngine::pitchShift (float input) noexcept
     {
         const float window = hann (grain.phase);
         const float age = grain.phase * grainLengthSamples;
-        // Read faster than write → +1 octave; long Hann grains keep it smooth
-        const float readPos = (float) pitchWrite - age * kPitchRatio;
+        const float readPos = (float) pitchWrite - age * pitchRatio;
         shifted += grainRead (readPos) * window;
         windowSum += window;
 
@@ -178,9 +226,9 @@ float ShimmerEngine::pitchShift (float input) noexcept
     return shifted;
 }
 
-void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR) noexcept
+void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR,
+                                float decay, float pitchFb) noexcept
 {
-    // Read FDN taps
     std::array<float, kFdnSize> taps {};
     for (int i = 0; i < kFdnSize; ++i)
     {
@@ -188,7 +236,6 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR) 
         taps[(size_t) i] = line.buffer[(size_t) line.index];
     }
 
-    // Householder-ish mixing: sum + local reflection → dense, non-metallic cloud
     float sum = 0.0f;
     for (float t : taps)
         sum += t;
@@ -198,23 +245,21 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR) 
     for (int i = 0; i < kFdnSize; ++i)
         mixed[(size_t) i] = taps[(size_t) i] - scale * sum;
 
-    // Pitch-shifted feedback into the cloud (mono sum → octave wash)
     const float monoTap = 0.5f * (taps[0] + taps[4]);
     float pitched = pitchShift (monoTap);
 
-    // Soften pitch artifacts before reinjection
     pitchLpState += 0.18f * (pitched - pitchLpState);
     pitched = pitchLpState;
 
-    const float injectL = inL + pitched * kPitchFeedback;
-    const float injectR = inR + pitched * kPitchFeedback;
+    const float dampCoeff = dampCoeffSmoothed.getNextValue();
+    const float injectL = inL + pitched * pitchFb;
+    const float injectR = inR + pitched * pitchFb;
 
-    // Write back with damping + decay
     for (int i = 0; i < kFdnSize; ++i)
     {
         auto& line = fdn[(size_t) i];
         const float input = (i & 1) ? injectR : injectL;
-        float sample = mixed[(size_t) i] * kDecay + input * (0.15f + 0.02f * (float) i);
+        float sample = mixed[(size_t) i] * decay + input * (0.15f + 0.02f * (float) i);
 
         line.filterState += dampCoeff * (sample - line.filterState);
         sample = line.filterState;
@@ -223,7 +268,6 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR) 
         line.index = (line.index + 1) % line.size;
     }
 
-    // Stereo pickup from interleaved lines
     outL = 0.0f;
     outR = 0.0f;
     for (int i = 0; i < kFdnSize; i += 2)
@@ -237,28 +281,44 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR) 
 
 void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
 {
+    if (preDelaySize <= 0)
+        return;
+
     const int numSamples = buffer.getNumSamples();
     const int channels = juce::jmin (buffer.getNumChannels(), numChannels);
 
     for (int i = 0; i < numSamples; ++i)
     {
         const float amount = amountSmoothed.getNextValue();
+        const float ethereal = etherealSmoothed.getNextValue();
+        const float decay = decaySmoothed.getNextValue();
+        const float pitchFb = pitchFbSmoothed.getNextValue();
+        const float inputHpCoeff = inputHpCoeffSmoothed.getNextValue();
+        const float washHpCoeff = washHpCoeffSmoothed.getNextValue();
+        const float preDelaySamples = juce::jlimit (
+            1.0f, (float) preDelaySize - 1.0f, preDelaySamplesSmoothed.getNextValue());
 
         float inL = buffer.getSample (0, i);
         float inR = channels > 1 ? buffer.getSample (1, i) : inL;
 
-        // Input HPF — wash stays behind the guitar, low end solid
         inputHpState[0] += inputHpCoeff * (inL - inputHpState[0]);
         inputHpState[1] += inputHpCoeff * (inR - inputHpState[1]);
         const float hpL = inL - inputHpState[0];
         const float hpR = inR - inputHpState[1];
 
-        // Soft pre-delay into the bloom
-        const float pdL = preDelayL[(size_t) preDelayIndex];
-        const float pdR = preDelayR[(size_t) preDelayIndex];
-        preDelayL[(size_t) preDelayIndex] = hpL;
-        preDelayR[(size_t) preDelayIndex] = hpR;
-        preDelayIndex = (preDelayIndex + 1) % preDelaySize;
+        // Variable-length pre-delay into the bloom
+        preDelayL[(size_t) preDelayWrite] = hpL;
+        preDelayR[(size_t) preDelayWrite] = hpR;
+
+        float readPos = (float) preDelayWrite - preDelaySamples;
+        while (readPos < 0.0f)
+            readPos += (float) preDelaySize;
+        const int i0 = (int) readPos;
+        const float frac = readPos - (float) i0;
+        const int i1 = (i0 + 1) % preDelaySize;
+        const float pdL = preDelayL[(size_t) i0] + frac * (preDelayL[(size_t) i1] - preDelayL[(size_t) i0]);
+        const float pdR = preDelayR[(size_t) i0] + frac * (preDelayR[(size_t) i1] - preDelayR[(size_t) i0]);
+        preDelayWrite = (preDelayWrite + 1) % preDelaySize;
 
         float dL = pdL;
         float dR = pdR;
@@ -268,17 +328,36 @@ void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
             dR = processDiffuser (diffR[(size_t) d], dR);
         }
 
+        // Extra diffusion pass when ethereal for denser space
+        if (ethereal > 0.001f)
+        {
+            dL = processDiffuser (diffL[0], dL * ethereal + dL * (1.0f - ethereal));
+            dR = processDiffuser (diffR[1], dR * ethereal + dR * (1.0f - ethereal));
+        }
+
         float revL = 0.0f, revR = 0.0f;
-        processFdn (dL, dR, revL, revR);
+        processFdn (dL, dR, revL, revR, decay, pitchFb);
 
         washHpState[0] += washHpCoeff * (revL - washHpState[0]);
         washHpState[1] += washHpCoeff * (revR - washHpState[1]);
         revL -= washHpState[0];
         revR -= washHpState[1];
 
-        // Shimmer amount = wet contribution of the pitch-shifted reverb cloud
-        buffer.setSample (0, i, inL + amount * revL);
+        // Ethereal: slow stereo drift + cross-feed for a floating image
+        spaceLfoPhase += 0.07f / (float) sampleRate;
+        if (spaceLfoPhase >= 1.0f)
+            spaceLfoPhase -= 1.0f;
+        const float space = std::sin (spaceLfoPhase * juce::MathConstants<float>::twoPi);
+        const float width = 0.18f * ethereal;
+        const float cross = 0.22f * ethereal;
+        float outWashL = revL * (1.0f + space * width) + revR * cross;
+        float outWashR = revR * (1.0f - space * width) + revL * cross;
+
+        // Slight amount lift in ethereal so the cloud sits further back but audible
+        const float amountScale = 1.0f + 0.35f * ethereal;
+
+        buffer.setSample (0, i, inL + amount * amountScale * outWashL);
         if (channels > 1)
-            buffer.setSample (1, i, inR + amount * revR);
+            buffer.setSample (1, i, inR + amount * amountScale * outWashR);
     }
 }
