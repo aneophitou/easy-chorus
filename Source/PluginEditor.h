@@ -17,12 +17,36 @@ public:
     void resized() override;
 
 private:
+    struct Knob
+    {
+        juce::Component  dialHost;   // holds overlay + slider
+        DialStepOverlay  steps;
+        juce::Slider     slider;
+        juce::Label      title;
+        juce::Label      value;
+        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
+    };
+
     void timerCallback() override;
-    void layoutSectionToggles (juce::Rectangle<int> bounds);
-    void layoutTempoRow (juce::Rectangle<int> bounds);
-    void layoutDelayModeRow (juce::Rectangle<int> bounds);
-    void layoutKnobs (juce::Rectangle<int> bounds);
+
     void layoutPresetBar (juce::Rectangle<int> bounds);
+    void layoutChorusColumn (juce::Rectangle<int> bounds);
+    void layoutDelayColumn (juce::Rectangle<int> bounds);
+    void layoutShimmerColumn (juce::Rectangle<int> bounds);
+    void layoutOutputRow (juce::Rectangle<int> bounds);
+    void layoutToggleRow (juce::Rectangle<int> bounds,
+                          juce::TextButton* const* toggles,
+                          int count,
+                          int gap);
+    void layoutKnobStack (juce::Rectangle<int> bounds,
+                          Knob* const* knobs,
+                          int count);
+    void layoutOneKnob (Knob& knob, juce::Rectangle<int> cell);
+
+    void paintSectionPanel (juce::Graphics& g,
+                            juce::Rectangle<float> bounds,
+                            const juce::String& title) const;
+
     void refreshToggleLook (juce::TextButton& button, bool isOn);
     void refreshDemoLook();
     void refreshTempoLooks();
@@ -37,18 +61,6 @@ private:
     void selectPrevPreset();
     void selectNextPreset();
     void syncPresetComboFromProcessor();
-
-    struct Knob
-    {
-        juce::Component  dialHost;   // holds overlay + slider
-        DialStepOverlay  steps;
-        juce::Slider     slider;
-        juce::Label      title;
-        juce::Label      value;
-        std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
-    };
-
-    void layoutOneKnob (Knob& knob, juce::Rectangle<int> cell);
 
     void setupKnob (Knob& knob,
                     const juce::String& name,
@@ -68,15 +80,16 @@ private:
     EasyChorusAudioProcessor& audioProcessor;
 
     juce::TextButton demoToggle { "Demo" };
-    juce::TextButton chorusToggle { "Chorus" };
-    juce::TextButton delayToggle  { "Delay" };
-    juce::TextButton shimmerToggle { "Shimmer" };
+    juce::TextButton chorusToggle { "On" };
+    juce::TextButton delayToggle  { "On" };
+    juce::TextButton shimmerToggle { "On" };
     juce::TextButton syncToggle { "Sync" };
     juce::TextButton musicalToggle { "Musical" };
     juce::TextButton stereoToggle { "Stereo" };
     juce::TextButton pingPongToggle { "Ping" };
     juce::TextButton reverseToggle { "Reverse" };
     juce::TextButton etherealToggle { "Ethereal" };
+    juce::TextButton wavesToggle { "Waves" };
 
     juce::TextButton presetPrevButton { "<" };
     juce::TextButton presetNextButton { ">" };
@@ -92,6 +105,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayPingPongAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayReverseAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shimmerEtherealAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> wavesOnAttachment;
 
     Knob bpmKnob;
     Knob rateKnob;
@@ -100,11 +114,17 @@ private:
     Knob feedbackKnob;
     Knob shimmerKnob;
     Knob pitchKnob;
+    Knob decayKnob;
     Knob chorusLevelKnob;
     Knob delayLevelKnob;
     Knob shimmerLevelKnob;
     Knob mixKnob;
     Knob masterKnob;
+
+    juce::Rectangle<float> chorusPanelBounds;
+    juce::Rectangle<float> delayPanelBounds;
+    juce::Rectangle<float> shimmerPanelBounds;
+    juce::Rectangle<float> outputPanelBounds;
 
     bool delayKnobMusical = false;
     bool ignorePresetComboCallback = false;
