@@ -134,7 +134,7 @@ private:
             { "chorusOn", 0 }, { "delayOn", 1 }, { "shimmerOn", 0 },
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
-            { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 380.0f }, { "feedback", 0.42f },
+            { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 420.0f }, { "feedback", 0.42f },
             { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerEthereal", 0 },
             { "chorusLevel", 0.0f }, { "delayLevel", 1.0f }, { "shimmerLevel", 0.0f },
             { "mix", 0.40f }, { "master", 1.0f },
