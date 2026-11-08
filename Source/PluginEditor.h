@@ -19,7 +19,7 @@ public:
 private:
     struct Knob
     {
-        juce::Component  dialHost;   // holds overlay + slider
+        juce::Component  dialHost;
         DialStepOverlay  steps;
         juce::Slider     slider;
         juce::Label      title;
@@ -31,9 +31,9 @@ private:
 
     void layoutPresetBar (juce::Rectangle<int> bounds);
     void layoutChorusColumn (juce::Rectangle<int> bounds);
-    void layoutDelayColumn (juce::Rectangle<int> bounds);
-    void layoutShimmerColumn (juce::Rectangle<int> bounds);
-    void layoutOutputRow (juce::Rectangle<int> bounds);
+    void layoutDelayColumn (juce::Rectangle<int> bounds, bool isSecond);
+    void layoutShimmerColumn (juce::Rectangle<int> bounds, bool isSecond);
+    void layoutOutputColumn (juce::Rectangle<int> bounds);
     void layoutToggleRow (juce::Rectangle<int> bounds,
                           juce::TextButton* const* toggles,
                           int count,
@@ -50,17 +50,18 @@ private:
     void refreshToggleLook (juce::TextButton& button, bool isOn);
     void refreshDemoLook();
     void refreshTempoLooks();
-    void refreshDelayModeLooks();
+    void refreshModeLooks();
     void refreshPresetLook();
-    void rebindDelayKnob();
+    void rebindDelayKnob (bool isSecond);
     void updateBpmInteraction();
-    void updateDelayValueLabel();
-    void configureDelayFreeSteps();
-    void configureDelayMusicalSteps();
+    void updateDelayValueLabel (bool isSecond);
+    void configureDelayFreeSteps (Knob& knob);
+    void configureDelayMusicalSteps (Knob& knob);
     void loadSelectedPreset();
     void selectPrevPreset();
     void selectNextPreset();
     void syncPresetComboFromProcessor();
+    void setupDelayKnobShell (Knob& knob);
 
     void setupKnob (Knob& knob,
                     const juce::String& name,
@@ -83,12 +84,19 @@ private:
     juce::TextButton chorusToggle { "On" };
     juce::TextButton delayToggle  { "On" };
     juce::TextButton shimmerToggle { "On" };
+    juce::TextButton delay2Toggle { "On" };
+    juce::TextButton shimmer2Toggle { "On" };
     juce::TextButton syncToggle { "Sync" };
     juce::TextButton musicalToggle { "Musical" };
+    juce::TextButton musical2Toggle { "Musical" };
     juce::TextButton stereoToggle { "Stereo" };
     juce::TextButton pingPongToggle { "Ping" };
     juce::TextButton reverseToggle { "Reverse" };
+    juce::TextButton stereo2Toggle { "Stereo" };
+    juce::TextButton pingPong2Toggle { "Ping" };
+    juce::TextButton reverse2Toggle { "Reverse" };
     juce::TextButton etherealToggle { "Ethereal" };
+    juce::TextButton ethereal2Toggle { "Ethereal" };
     juce::TextButton wavesToggle { "Waves" };
 
     juce::TextButton presetPrevButton { "<" };
@@ -99,12 +107,19 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> chorusOnAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayOnAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shimmerOnAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delay2OnAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shimmer2OnAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> tempoSyncAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayMusicalAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delay2MusicalAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayStereoAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayPingPongAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayReverseAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delay2StereoAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delay2PingPongAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delay2ReverseAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shimmerEtherealAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shimmer2EtherealAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> wavesOnAttachment;
 
     Knob bpmKnob;
@@ -118,15 +133,25 @@ private:
     Knob chorusLevelKnob;
     Knob delayLevelKnob;
     Knob shimmerLevelKnob;
+    Knob delay2Knob;
+    Knob feedback2Knob;
+    Knob delay2LevelKnob;
+    Knob shimmer2Knob;
+    Knob pitch2Knob;
+    Knob decay2Knob;
+    Knob shimmer2LevelKnob;
     Knob mixKnob;
     Knob masterKnob;
 
     juce::Rectangle<float> chorusPanelBounds;
     juce::Rectangle<float> delayPanelBounds;
     juce::Rectangle<float> shimmerPanelBounds;
+    juce::Rectangle<float> delay2PanelBounds;
+    juce::Rectangle<float> shimmer2PanelBounds;
     juce::Rectangle<float> outputPanelBounds;
 
     bool delayKnobMusical = false;
+    bool delay2KnobMusical = false;
     bool ignorePresetComboCallback = false;
     float lfoPhase = 0.0f;
 
