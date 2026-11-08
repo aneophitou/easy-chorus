@@ -1,1 +1,1 @@
-{{file:/home/ubuntu/.cursor/projects/agent/agent-tools/PluginEditor-FULL.cpp}}
+@file:///tmp/easy-chorus-restore/PluginEditor.cpp
