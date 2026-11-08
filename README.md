@@ -88,7 +88,9 @@ When a section is off, that DSP block is **skipped** (not merely amount=0). Solo
 
 Use the **in-plugin** preset bar (top row, left of Demo): **`<` / `>`** or the dropdown — no Options menu needed.
 
-Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, High Halo, Musical 1/8, Wide Stereo.
+Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dream, Shimmer Cloud, Ethereal Wash, Starfield, High Halo, Musical 1/8, Wide Stereo.
+
+**High sparkles / spacey tips:** open the **Shimmer** (and **Shimmer 2**) pages — set **Pitch** to **+19** or **+24**, turn **Ethereal** on, keep **Amount** moderate, and leave **Mix** around 35–45% so the dry line stays clear. Try presets **Starfield** or **Ethereal Wash**.
 
 ### UI layout
 
