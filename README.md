@@ -115,7 +115,7 @@ Dials have **clickable step marks** around the rim — tap a mark to jump to tha
 ### Knobs
 
 | Control | Range | Default | Role |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | Rate | 0.1–4 Hz | 0.70 Hz | Chorus LFO (CE-style) |
 | Depth | 0–100% | 35% | Chorus thickening |
 | Time / Note | 50–1000 ms | 380 ms | Delay time (ms) or musical division |
