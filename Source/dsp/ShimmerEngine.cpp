@@ -86,7 +86,9 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
     preDelaySamplesSmoothed.reset (sampleRate, smoothSec);
 
     etherealEnabled = false;
+    decaySeconds = kDefaultDecaySec;
     updateModeTargets();
+    refreshDecayTarget();
     decaySmoothed.setCurrentAndTargetValue (decaySmoothed.getTargetValue());
     pitchFbSmoothed.setCurrentAndTargetValue (pitchFbSmoothed.getTargetValue());
     dampCoeffSmoothed.setCurrentAndTargetValue (dampCoeffSmoothed.getTargetValue());
@@ -145,12 +147,34 @@ void ShimmerEngine::setPitchSemitones (float semitones)
     pitchRatioSmoothed.setTargetValue (juce::jlimit (0.5f, kMaxPitchRatio, ratio));
 }
 
+void ShimmerEngine::setDecaySeconds (float seconds)
+{
+    decaySeconds = juce::jlimit (kMinDecaySec, kMaxDecaySec, seconds);
+    refreshDecayTarget();
+}
+
+float ShimmerEngine::feedbackFromDecaySeconds (float seconds) const noexcept
+{
+    const float rt = juce::jmax (0.2f, seconds);
+    const float avgDelaySec = kAvgFdnDelayMs * 0.001f;
+    // RT60: feedback^(rt/delay) ≈ 0.001
+    const float fb = std::pow (0.001f, avgDelaySec / rt);
+    return juce::jlimit (0.05f, kMaxFeedback, fb);
+}
+
+void ShimmerEngine::refreshDecayTarget() noexcept
+{
+    const float scaled = decaySeconds * (etherealEnabled ? kEtherealDecayScale : 1.0f);
+    decaySmoothed.setTargetValue (feedbackFromDecaySeconds (scaled));
+}
+
 void ShimmerEngine::setEthereal (bool enabled) noexcept
 {
     if (etherealEnabled == enabled)
         return;
     etherealEnabled = enabled;
     updateModeTargets();
+    refreshDecayTarget();
 }
 
 void ShimmerEngine::updateModeTargets() noexcept
@@ -160,7 +184,6 @@ void ShimmerEngine::updateModeTargets() noexcept
     const float e = etherealEnabled ? 1.0f : 0.0f;
     auto lerp = [e] (float a, float b) { return a + (b - a) * e; };
 
-    decaySmoothed.setTargetValue (lerp (kDecayNormal, kDecayEthereal));
     pitchFbSmoothed.setTargetValue (lerp (kPitchFbNormal, kPitchFbEthereal));
     dampCoeffSmoothed.setTargetValue (onePoleCoeff (sampleRate, lerp (kDampingHzNormal, kDampingHzEthereal)));
     inputHpCoeffSmoothed.setTargetValue (onePoleCoeff (sampleRate, lerp (kInputHpfHzNormal, kInputHpfHzEthereal)));
