@@ -161,7 +161,7 @@ private:
         });
 
         addPreset ("Shimmer Cloud", {
-            { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 0 },
+            { "chorusOn", 1 }, { "delayOn", 1 }, { "shimmerOn", 1 },
             { "tempoSync", 1 }, { "bpm", 110 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 1 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
             { "rate", 0.50f }, { "depth", 0.28f }, { "delay", 320.0f }, { "feedback", 0.28f },
