@@ -1,13 +1,23 @@
 #include "DelayEngine.h"
 #include <cmath>
 
+namespace
+{
+float hannWindow (float phase01) noexcept
+{
+    return 0.5f * (1.0f - std::cos (juce::MathConstants<float>::twoPi * phase01));
+}
+} // namespace
+
 void DelayEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int newNumChannels)
 {
     sampleRate = newSampleRate > 0.0 ? newSampleRate : 44100.0;
+    // Always keep dual delay lines so Stereo / Ping can engage without reallocating
     numChannels = juce::jlimit (1, 2, newNumChannels);
+    const int lines = 2;
 
     bufferSize = juce::jmax (64, (int) std::ceil ((kMaxDelayMs / 1000.0f) * (float) sampleRate) + 8);
-    delayLine.assign ((size_t) numChannels, std::vector<float> ((size_t) bufferSize, 0.0f));
+    delayLine.assign ((size_t) lines, std::vector<float> ((size_t) bufferSize, 0.0f));
     writeIndex = 0;
 
     const float smoothSec = 0.05f;
@@ -22,6 +32,7 @@ void DelayEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int n
     // Mild HPF — clean digital repeats, not dark tape
     fbHpfCoeff = 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * 90.0f / (float) sampleRate);
     fbLpState = { 0.0f, 0.0f };
+    reversePhase = { 0.0f, 0.5f };
 
     reset();
 }
@@ -33,6 +44,7 @@ void DelayEngine::reset()
 
     writeIndex = 0;
     fbLpState = { 0.0f, 0.0f };
+    reversePhase = { 0.0f, 0.5f };
 }
 
 void DelayEngine::setDelayMs (float delayMs)
@@ -60,33 +72,130 @@ float DelayEngine::readAt (int channel, float delaySamples) const
     return buf[(size_t) i0] + frac * (buf[(size_t) i1] - buf[(size_t) i0]);
 }
 
+float DelayEngine::readReverseAt (int channel, float delaySamples, float phase) const noexcept
+{
+    // phase 0→1 reads newest→oldest (tape reverse of the recent window)
+    const float safeDelay = juce::jmax (2.0f, delaySamples);
+    const float window = hannWindow (phase);
+    const float age = phase * safeDelay;
+    return readAt (channel, age) * window;
+}
+
+void DelayEngine::advanceReversePhases (float delaySamples) noexcept
+{
+    const float safeDelay = juce::jmax (2.0f, delaySamples);
+    for (auto& phase : reversePhase)
+    {
+        phase += 1.0f / safeDelay;
+        if (phase >= 1.0f)
+            phase -= 1.0f;
+    }
+}
+
+float DelayEngine::filterFeedback (int channel, float delayed) noexcept
+{
+    fbLpState[(size_t) channel] += fbHpfCoeff * (delayed - fbLpState[(size_t) channel]);
+    return delayed - fbLpState[(size_t) channel];
+}
+
 void DelayEngine::process (juce::AudioBuffer<float>& buffer)
 {
-    if (bufferSize <= 0 || delayLine.empty())
+    if (bufferSize <= 0 || delayLine.size() < 2)
         return;
 
     const int numSamples = buffer.getNumSamples();
-    const int channels = juce::jmin (buffer.getNumChannels(), numChannels);
+    const int bufChannels = buffer.getNumChannels();
+    if (bufChannels <= 0)
+        return;
+
+    const bool stereoBuf = bufChannels > 1;
+    const bool usePing = pingPongEnabled && stereoBuf;
+    const bool useStereoOffset = stereoEnabled && stereoBuf;
+
+    const float stereoOffsetSamples = kStereoOffsetMs * 0.001f * (float) sampleRate;
 
     for (int i = 0; i < numSamples; ++i)
     {
         const float delaySamples = delaySamplesSmoothed.getNextValue();
         const float feedback = feedbackSmoothed.getNextValue();
 
-        for (int ch = 0; ch < channels; ++ch)
+        const float inL = buffer.getSample (0, i);
+        const float inR = stereoBuf ? buffer.getSample (1, i) : inL;
+
+        auto tap = [this] (int channel, float samples) noexcept
         {
-            const float input = buffer.getSample (ch, i);
-            float delayed = readAt (ch, delaySamples);
+            if (! reverseEnabled)
+                return readAt (channel, samples);
 
-            fbLpState[(size_t) ch] += fbHpfCoeff * (delayed - fbLpState[(size_t) ch]);
-            const float fbFiltered = delayed - fbLpState[(size_t) ch];
+            float mixed = 0.0f;
+            float windowSum = 0.0f;
+            for (float phase : reversePhase)
+            {
+                const float window = hannWindow (phase);
+                mixed += readReverseAt (channel, samples, phase);
+                windowSum += window;
+            }
+            return windowSum > 1.0e-4f ? mixed / windowSum : mixed;
+        };
 
-            delayLine[(size_t) ch][(size_t) writeIndex] = input + fbFiltered * feedback;
+        if (! stereoEnabled && ! usePing)
+        {
+            // Linked mono delay: one clear echo image in both speakers
+            const float monoIn = 0.5f * (inL + inR);
+            const float delayed = tap (0, delaySamples);
+            const float fbFiltered = filterFeedback (0, delayed);
 
-            // Clean digital: keep direct, add one clear echo trail
-            buffer.setSample (ch, i, input + delayed * 0.85f);
+            delayLine[0][(size_t) writeIndex] = monoIn + fbFiltered * feedback;
+            delayLine[1][(size_t) writeIndex] = delayLine[0][(size_t) writeIndex];
+
+            const float wet = monoIn + delayed * kWetLevel;
+            buffer.setSample (0, i, wet);
+            if (stereoBuf)
+                buffer.setSample (1, i, wet);
         }
+        else if (usePing)
+        {
+            // Classic ping-pong: each side feeds the other
+            const float delayL = delaySamples;
+            const float delayR = delaySamples + (useStereoOffset ? stereoOffsetSamples : 0.0f);
+
+            const float delayedL = tap (0, delayL);
+            const float delayedR = tap (1, delayR);
+
+            const float fbL = filterFeedback (0, delayedL);
+            const float fbR = filterFeedback (1, delayedR);
+
+            delayLine[0][(size_t) writeIndex] = inL + fbR * feedback;
+            delayLine[1][(size_t) writeIndex] = inR + fbL * feedback;
+
+            buffer.setSample (0, i, inL + delayedL * kWetLevel);
+            buffer.setSample (1, i, inR + delayedR * kWetLevel);
+        }
+        else
+        {
+            // Stereo (parallel) delay with optional right-channel offset for width
+            const float delayL = delaySamples;
+            const float delayR = delaySamples + (useStereoOffset ? stereoOffsetSamples : 0.0f);
+
+            const float delayedL = tap (0, delayL);
+            const float delayedR = tap (1, delayR);
+
+            const float fbL = filterFeedback (0, delayedL);
+            const float fbR = filterFeedback (1, delayedR);
+
+            delayLine[0][(size_t) writeIndex] = inL + fbL * feedback;
+            delayLine[1][(size_t) writeIndex] = inR + fbR * feedback;
+
+            buffer.setSample (0, i, inL + delayedL * kWetLevel);
+            if (stereoBuf)
+                buffer.setSample (1, i, inR + delayedR * kWetLevel);
+        }
+
+        if (reverseEnabled)
+            advanceReversePhases (delaySamples);
 
         writeIndex = (writeIndex + 1) % bufferSize;
     }
+
+    juce::ignoreUnused (numChannels);
 }
