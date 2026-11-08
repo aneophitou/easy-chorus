@@ -119,7 +119,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout EasyChorusAudioProcessor::cr
         juce::ParameterID { kShimmerId, 1 },
         "Shimmer",
         juce::NormalisableRange<float> { 0.0f, 1.0f, 0.001f },
-        0.25f,
+        0.05f,
         percentAttributes()));
 
     params.push_back (std::make_unique<juce::AudioParameterFloat> (
