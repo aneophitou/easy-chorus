@@ -13,6 +13,7 @@ static void runCase (const char* name, bool ethereal, float amount)
     eng.prepare (sr, block, 2);
     eng.setAmount (amount);
     eng.setPitchSemitones (12.0f);
+    eng.setDecaySeconds (3.5f);
     eng.setEthereal (ethereal);
 
     juce::AudioBuffer<float> buf (2, block);

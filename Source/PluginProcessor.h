@@ -6,6 +6,7 @@
 #include "dsp/DemoToneGenerator.h"
 #include "dsp/ShimmerEngine.h"
 #include "presets/PresetManager.h"
+#include <vector>
 
 class EasyChorusAudioProcessor : public juce::AudioProcessor
 {
@@ -64,6 +65,7 @@ private:
 
     juce::AudioBuffer<float> dryBuffer;
     juce::AudioBuffer<float> stageBuffer;
+    std::vector<float> wavesEnvelope;
 
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> mixSmoothed;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> chorusLevelSmoothed;
@@ -71,6 +73,8 @@ private:
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> shimmerLevelSmoothed;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> masterSmoothed;
     float lastHostBpm = 120.0f;
+    double currentSampleRate = 44100.0;
+    float wavesPhase = 0.0f; // 0…1 cycle for delay+shimmer swell
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EasyChorusAudioProcessor)
 };
