@@ -92,7 +92,9 @@ Factory set includes BFMV Clean, Chorus Glow, Delay Trail, Ping Pong, Reverse Dr
 
 ### UI layout
 
-Controls are grouped into **Chorus**, **Delay**, **Shimmer**, and **Output** panels. Each effect column has its On switch, mode toggles, and knobs; Mix / Master sit in Output.
+Controls are grouped into **Chorus**, **Delay**, **Shimmer**, **Delay 2**, **Shimmer 2**, and **Output** panels.
+Signal path is serial: Chorus → Delay → Shimmer → Delay 2 → Shimmer 2 → Mix/Master.
+Each effect column has its On switch, mode toggles, and knobs; **Waves** / Mix / Master sit in Output.
 
 ### Delay / shimmer modes
 
@@ -102,7 +104,9 @@ Controls are grouped into **Chorus**, **Delay**, **Shimmer**, and **Output** pan
 | **Ping** | Off | Ping-pong cross-feedback (L↔R). Combines with Stereo offset |
 | **Reverse** | Off | Tape-style reverse echoes (overlapping reverse grains) |
 | **Ethereal** | Off | Airier / wider shimmer bloom (mild RT stretch; Decay still applies) |
-| **Waves** | Off | Tempo-synced swell: delay + shimmer breathe in/out over 2 bars |
+| **Waves** | Off | Tempo-synced swell: both delay + shimmer layers breathe in/out over 2 bars |
+
+Delay 2 / Shimmer 2 mirror the first layers (own time/pitch/decay/modes/levels) so you can stack reverse+forward, dual pitches, etc.
 
 Dials have **clickable step marks** around the rim — tap a mark to jump to that value (still drag for fine control).
 
