@@ -18,18 +18,10 @@ float onePoleCoeff (double sampleRate, float hz) noexcept
     return 1.0f - std::exp (-2.0f * juce::MathConstants<float>::pi * hz / (float) sampleRate);
 }
 
+// Prime-ish diffuser / FDN lengths (ms) for dense, non-metallic bloom
 constexpr float kDiffMs[4] = { 7.1f, 11.3f, 17.9f, 23.7f };
 constexpr float kFdnMs[8]  = { 29.3f, 37.1f, 47.9f, 58.3f, 71.9f, 83.7f, 97.1f, 113.3f };
 } // namespace
-
-float ShimmerEngine::softClip (float x) noexcept
-{
-    // Gentle tanh-ish clip keeps ethereal feedback from running away
-    const float ax = std::abs (x);
-    if (ax <= 1.0f)
-        return x;
-    return std::copysign (1.0f + std::tanh (ax - 1.0f), x);
-}
 
 void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int newNumChannels)
 {
@@ -46,6 +38,7 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
             d.z = 0.0f;
         };
         setup (diffL[(size_t) i], kDiffMs[i]);
+        // Wider L/R skew ready for ethereal decorrelation
         setup (diffR[(size_t) i], kDiffMs[i] * 1.13f);
     }
 
@@ -71,9 +64,9 @@ void ShimmerEngine::prepare (double newSampleRate, int /*maximumBlockSize*/, int
     preDelayWrite = 0;
     spaceLfoPhase = 0.0f;
 
-    const float smoothSec = 0.12f;
+    const float smoothSec = 0.12f; // gentle morph into ethereal
     amountSmoothed.reset (sampleRate, 0.05f);
-    amountSmoothed.setCurrentAndTargetValue (0.25f);
+    amountSmoothed.setCurrentAndTargetValue (0.05f);
     pitchRatioSmoothed.reset (sampleRate, 0.08f);
     pitchRatioSmoothed.setCurrentAndTargetValue (2.0f);
     etherealSmoothed.reset (sampleRate, smoothSec);
@@ -147,8 +140,6 @@ void ShimmerEngine::setPitchSemitones (float semitones)
 
 void ShimmerEngine::setEthereal (bool enabled) noexcept
 {
-    if (etherealEnabled == enabled)
-        return;
     etherealEnabled = enabled;
     updateModeTargets();
 }
@@ -232,7 +223,7 @@ float ShimmerEngine::pitchShift (float input) noexcept
     if (windowSum > 1.0e-4f)
         shifted /= windowSum;
 
-    return softClip (shifted);
+    return shifted;
 }
 
 void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR,
@@ -261,19 +252,17 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR,
     pitched = pitchLpState;
 
     const float dampCoeff = dampCoeffSmoothed.getNextValue();
-    // Keep pitched feedback below unity with the decay path
-    const float safePitchFb = juce::jmin (pitchFb, 0.62f);
-    const float injectL = softClip (inL + pitched * safePitchFb);
-    const float injectR = softClip (inR + pitched * safePitchFb);
+    const float injectL = inL + pitched * pitchFb;
+    const float injectR = inR + pitched * pitchFb;
 
     for (int i = 0; i < kFdnSize; ++i)
     {
         auto& line = fdn[(size_t) i];
         const float input = (i & 1) ? injectR : injectL;
-        float sample = mixed[(size_t) i] * decay + input * (0.18f + 0.015f * (float) i);
+        float sample = mixed[(size_t) i] * decay + input * (0.15f + 0.02f * (float) i);
 
         line.filterState += dampCoeff * (sample - line.filterState);
-        sample = softClip (line.filterState);
+        sample = line.filterState;
 
         line.buffer[(size_t) line.index] = sample;
         line.index = (line.index + 1) % line.size;
@@ -286,8 +275,8 @@ void ShimmerEngine::processFdn (float inL, float inR, float& outL, float& outR,
         outL += taps[(size_t) i];
         outR += taps[(size_t) i + 1];
     }
-    outL *= 0.55f;
-    outR *= 0.55f;
+    outL *= 0.35f;
+    outR *= 0.35f;
 }
 
 void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
@@ -317,6 +306,7 @@ void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
         const float hpL = inL - inputHpState[0];
         const float hpR = inR - inputHpState[1];
 
+        // Variable-length pre-delay into the bloom
         preDelayL[(size_t) preDelayWrite] = hpL;
         preDelayR[(size_t) preDelayWrite] = hpR;
 
@@ -338,6 +328,13 @@ void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
             dR = processDiffuser (diffR[(size_t) d], dR);
         }
 
+        // Extra diffusion pass when ethereal for denser space
+        if (ethereal > 0.001f)
+        {
+            dL = processDiffuser (diffL[0], dL * ethereal + dL * (1.0f - ethereal));
+            dR = processDiffuser (diffR[1], dR * ethereal + dR * (1.0f - ethereal));
+        }
+
         float revL = 0.0f, revR = 0.0f;
         processFdn (dL, dR, revL, revR, decay, pitchFb);
 
@@ -346,21 +343,18 @@ void ShimmerEngine::process (juce::AudioBuffer<float>& buffer)
         revL -= washHpState[0];
         revR -= washHpState[1];
 
-        // Ethereal: slow stereo drift + mild cross-feed (no extra feedback)
+        // Ethereal: slow stereo drift + cross-feed for a floating image
         spaceLfoPhase += 0.07f / (float) sampleRate;
         if (spaceLfoPhase >= 1.0f)
             spaceLfoPhase -= 1.0f;
         const float space = std::sin (spaceLfoPhase * juce::MathConstants<float>::twoPi);
-        const float width = 0.22f * ethereal;
-        const float cross = 0.18f * ethereal;
+        const float width = 0.18f * ethereal;
+        const float cross = 0.22f * ethereal;
         float outWashL = revL * (1.0f + space * width) + revR * cross;
         float outWashR = revR * (1.0f - space * width) + revL * cross;
 
-        outWashL = softClip (outWashL * kWashMakeup);
-        outWashR = softClip (outWashR * kWashMakeup);
-
-        // Mild presence lift when ethereal — not a feedback gain
-        const float amountScale = 1.0f + 0.20f * ethereal;
+        // Slight amount lift in ethereal so the cloud sits further back but audible
+        const float amountScale = 1.0f + 0.35f * ethereal;
 
         buffer.setSample (0, i, inL + amount * amountScale * outWashL);
         if (channels > 1)
