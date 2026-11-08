@@ -163,7 +163,7 @@ private:
             { "chorusOn", 0 }, { "delayOn", 1 }, { "shimmerOn", 0 },
             { "tempoSync", 1 }, { "bpm", 120 }, { "delayMusical", 0 }, { "delayDivision", 3 },
             { "delayStereo", 0 }, { "delayPingPong", 0 }, { "delayReverse", 0 },
-            { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 380.0f }, { "feedback", 0.20f },
+            { "rate", 0.70f }, { "depth", 0.20f }, { "delay", 420.0f }, { "feedback", 0.42f },
             { "shimmer", 0.0f }, { "shimmerPitch", 12.0f }, { "shimmerDecay", 3.5f }, { "shimmerEthereal", 0 }, { "wavesOn", 0 }, { "delay2On", 0 }, { "delay2Musical", 0 }, { "delay2Division", 3 }, { "delay2", 500.0f }, { "feedback2", 0.28f }, { "delay2Stereo", 1 }, { "delay2PingPong", 0 }, { "delay2Reverse", 0 }, { "delay2Level", 1.0f }, { "shimmer2On", 0 }, { "shimmer2", 0.30f }, { "shimmer2Pitch", 7.0f }, { "shimmer2Decay", 5.0f }, { "shimmer2Ethereal", 0 }, { "shimmer2Level", 1.0f },
             { "chorusLevel", 0.0f }, { "delayLevel", 1.0f }, { "shimmerLevel", 0.0f },
             { "mix", 0.40f }, { "master", 1.0f },
