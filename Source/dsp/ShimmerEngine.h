@@ -9,7 +9,8 @@
  *
  * Dense FDN diffusion with feedback through a configurable pitch shifter
  * (default +12 semitones). Optional Ethereal mode lengthens the bloom,
- * lifts the air band, and widens the image — kept stable with soft limiting.
+ * lifts the air band, widens the image, and pushes more pitched feedback
+ * for a spacier cloud.
  */
 class ShimmerEngine
 {
@@ -35,23 +36,22 @@ private:
     static constexpr float kMinSemitones = -12.0f;
     static constexpr float kMaxSemitones = 24.0f;
     static constexpr float kMaxPitchRatio = 4.0f;
-    static constexpr float kWashMakeup = 1.85f; // audible bloom at modest Amount settings
 
     // Normal mode
     static constexpr float kDecayNormal = 0.88f;
-    static constexpr float kPitchFbNormal = 0.48f;
+    static constexpr float kPitchFbNormal = 0.55f;
     static constexpr float kDampingHzNormal = 4200.0f;
     static constexpr float kInputHpfHzNormal = 180.0f;
-    static constexpr float kWashHpfHzNormal = 220.0f;
+    static constexpr float kWashHpfHzNormal = 250.0f;
     static constexpr float kPreDelayMsNormal = 35.0f;
 
-    // Ethereal / spacey mode — longer & wider, but feedback-stable
-    static constexpr float kDecayEthereal = 0.925f;
-    static constexpr float kPitchFbEthereal = 0.58f;
-    static constexpr float kDampingHzEthereal = 5600.0f;
-    static constexpr float kInputHpfHzEthereal = 210.0f;
-    static constexpr float kWashHpfHzEthereal = 320.0f;
-    static constexpr float kPreDelayMsEthereal = 95.0f;
+    // Ethereal / spacey mode
+    static constexpr float kDecayEthereal = 0.955f;
+    static constexpr float kPitchFbEthereal = 0.78f;
+    static constexpr float kDampingHzEthereal = 6800.0f; // brighter air in the loop
+    static constexpr float kInputHpfHzEthereal = 240.0f;
+    static constexpr float kWashHpfHzEthereal = 480.0f;  // thinner, floatier wash
+    static constexpr float kPreDelayMsEthereal = 110.0f;
     static constexpr float kMaxPreDelayMs = 120.0f;
 
     struct Diffuser
@@ -75,7 +75,6 @@ private:
         float phase = 0.0f;
     };
 
-    static float softClip (float x) noexcept;
     float processDiffuser (Diffuser& d, float input) noexcept;
     void  processFdn (float inL, float inR, float& outL, float& outR, float decay, float pitchFb) noexcept;
     float pitchShift (float input) noexcept;
@@ -100,11 +99,13 @@ private:
     std::array<float, 2> inputHpState { 0.0f, 0.0f };
     std::array<float, 2> washHpState { 0.0f, 0.0f };
 
+    // Max-sized pre-delay; read length morphs with ethereal
     std::vector<float> preDelayL;
     std::vector<float> preDelayR;
     int preDelaySize = 0;
     int preDelayWrite = 0;
 
+    // Slow stereo drift for ethereal width
     float spaceLfoPhase = 0.0f;
 
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> amountSmoothed;
