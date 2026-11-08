@@ -7,9 +7,9 @@
 /**
  * Valhalla Shimmer–inspired pitch-shifted reverb wash (original DSP).
  *
- * Dense FDN diffusion with feedback through a +12 semitone pitch shifter,
- * damping in the loop, soft bloom / long ethereal tail. The Shimmer amount
- * blends this wash behind the dry-through wet-chain signal.
+ * Dense FDN diffusion with feedback through a configurable pitch shifter
+ * (default +12 semitones), damping in the loop, soft bloom / long ethereal
+ * tail. The Shimmer amount blends this wash behind the dry-through wet-chain.
  */
 class ShimmerEngine
 {
@@ -20,6 +20,8 @@ public:
     void reset();
 
     void setAmount (float amount01);
+    /** Pitch shift in the feedback path, in semitones (−12 … +24). */
+    void setPitchSemitones (float semitones);
 
     void process (juce::AudioBuffer<float>& buffer);
 
@@ -27,12 +29,14 @@ private:
     static constexpr int kNumDiffusers = 4;
     static constexpr int kFdnSize = 8;
     static constexpr int kNumGrains = 3;
-    static constexpr float kPitchRatio = 2.0f; // +12 semitones
     static constexpr float kGrainMs = 90.0f;   // long grains → less robotic
+    static constexpr float kMinSemitones = -12.0f;
+    static constexpr float kMaxSemitones = 24.0f;
+    static constexpr float kMaxPitchRatio = 4.0f; // +24 semitones
 
     // Fixed v1 “size/color” defaults (Valhalla-like bloom)
     static constexpr float kDecay = 0.88f;         // long tail
-    static constexpr float kPitchFeedback = 0.55f; // how hard the octave feeds the cloud
+    static constexpr float kPitchFeedback = 0.55f; // how hard the pitch feeds the cloud
     static constexpr float kDampingHz = 4200.0f;   // HF damping in FDN
     static constexpr float kInputHpfHz = 180.0f;   // keep guitar low end clean
     static constexpr float kWashHpfHz = 250.0f;    // airy wash, less mud
@@ -91,4 +95,5 @@ private:
     int preDelayIndex = 0;
 
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> amountSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> pitchRatioSmoothed;
 };
