@@ -31,7 +31,7 @@ public:
     int getCurrentProgram() override { return 0; }
     void setCurrentProgram (int) override {}
     const juce::String getProgramName (int) override { return {}; }
-    void changeProgramName (int, const juce::String&) override {}
+    void changeProgramName (int, the juce::String&) override {}
 
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
@@ -40,8 +40,15 @@ public:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    /** Effective BPM: host tempo when Sync is on and available, else manual BPM. */
+    float getEffectiveBpm() const;
+    float getCurrentDelayMs() const;
+    bool  isTempoSyncEnabled() const;
+    bool  isDelayMusical() const;
+
 private:
     void updateEnginesFromParameters();
+    float readHostBpm() const;
 
     juce::AudioProcessorValueTreeState apvts;
     ChorusEngine      chorusEngine;
@@ -51,6 +58,7 @@ private:
 
     juce::AudioBuffer<float> dryBuffer;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> mixSmoothed;
+    float lastHostBpm = 120.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EasyChorusAudioProcessor)
 };
