@@ -106,34 +106,6 @@ target_sources(EasyChorusRenderSamples
         Source/dsp/ShimmerEngine.cpp
 )
 
-juce_add_console_app(EasyChorusTestShimmer
-    PRODUCT_NAME "EasyChorusTestShimmer"
-)
-juce_generate_juce_header(EasyChorusTestShimmer)
-target_sources(EasyChorusTestShimmer
-    PRIVATE
-        tools/TestShimmer.cpp
-        Source/dsp/ShimmerEngine.cpp
-)
-target_compile_definitions(EasyChorusTestShimmer
-    PRIVATE
-        JUCE_WEB_BROWSER=0
-        JUCE_USE_CURL=0
-        JUCE_DISPLAY_SPLASH_SCREEN=0
-)
-target_link_libraries(EasyChorusTestShimmer
-    PRIVATE
-        juce::juce_audio_basics
-        juce::juce_dsp
-        juce::juce_events
-        juce::juce_core
-        juce::juce_graphics
-        juce::juce_gui_basics
-        juce::juce_data_structures
-    PUBLIC
-        juce::juce_recommended_config_flags
-)
-
 target_compile_definitions(EasyChorusRenderSamples
     PRIVATE
         JUCE_WEB_BROWSER=0
