@@ -548,7 +548,7 @@ void EasyChorusAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (kMuted);
     g.setFont (juce::FontOptions (12.0f));
-    g.drawText ("chorus  \u00b7  delay  \u00b7  shimmer  \u00d72", 24, 40, 260, 16, juce::Justification::centredLeft);
+    g.drawText ("chorus  ·  delay  ·  shimmer  ×2", 24, 40, 260, 16, juce::Justification::centredLeft);
 
     const float wobble = std::sin (lfoPhase * juce::MathConstants<float>::twoPi) * 6.0f;
     g.setColour (kAccent.withAlpha (0.85f));
