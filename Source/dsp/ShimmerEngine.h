@@ -5,7 +5,7 @@
 #include <vector>
 
 /**
- * Pitch-shifted ambient wash (Valhalla / Eventide-inspired).
+ * Valhalla Shimmer–inspired pitch-shifted reverb wash (original DSP).
  *
  * Dense FDN diffusion with feedback through a configurable pitch shifter
  * (default +12 semitones). Optional Ethereal mode lengthens the bloom,
@@ -15,19 +15,24 @@
 class ShimmerEngine
 {
 public:
+    ShimmerEngine() = default;
+
     void prepare (double sampleRate, int maximumBlockSize, int numChannels);
     void reset();
-    void process (juce::AudioBuffer<float>& buffer);
 
-    void setAmount (float amount01);          // 0..1 wet wash amount
-    void setPitchSemitones (float semitones); // typically -12..+24
+    void setAmount (float amount01);
+    /** Pitch shift in the feedback path, in semitones (−12 … +24). */
+    void setPitchSemitones (float semitones);
+    /** When enabled, longer / airier / wider wash (smoothly morphs). */
     void setEthereal (bool enabled) noexcept;
 
+    void process (juce::AudioBuffer<float>& buffer);
+
 private:
-    static constexpr int   kNumDiffusers = 4;
-    static constexpr int   kFdnSize = 8;
-    static constexpr int   kNumGrains = 4;
-    static constexpr float kGrainMs = 80.0f;
+    static constexpr int kNumDiffusers = 4;
+    static constexpr int kFdnSize = 8;
+    static constexpr int kNumGrains = 3;
+    static constexpr float kGrainMs = 90.0f;
     static constexpr float kMinSemitones = -12.0f;
     static constexpr float kMaxSemitones = 24.0f;
     static constexpr float kMaxPitchRatio = 4.0f;
@@ -52,16 +57,16 @@ private:
     struct Diffuser
     {
         std::vector<float> buffer;
-        int size = 0;
         int index = 0;
+        int size = 1;
         float z = 0.0f;
     };
 
     struct FdnLine
     {
         std::vector<float> buffer;
-        int size = 0;
         int index = 0;
+        int size = 1;
         float filterState = 0.0f;
     };
 
@@ -80,17 +85,17 @@ private:
     int numChannels = 2;
     bool etherealEnabled = false;
 
-    std::array<Diffuser, kNumDiffusers> diffL;
-    std::array<Diffuser, kNumDiffusers> diffR;
-    std::array<FdnLine, kFdnSize> fdn;
+    std::array<Diffuser, kNumDiffusers> diffL {};
+    std::array<Diffuser, kNumDiffusers> diffR {};
+    std::array<FdnLine, kFdnSize> fdn {};
 
     std::vector<float> pitchDelay;
     int pitchDelaySize = 0;
     int pitchWrite = 0;
     float grainLengthSamples = 1.0f;
-    std::array<Grain, kNumGrains> grains;
-    float pitchLpState = 0.0f;
+    std::array<Grain, kNumGrains> grains {};
 
+    float pitchLpState = 0.0f;
     std::array<float, 2> inputHpState { 0.0f, 0.0f };
     std::array<float, 2> washHpState { 0.0f, 0.0f };
 
