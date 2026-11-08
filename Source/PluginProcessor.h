@@ -5,6 +5,7 @@
 #include "dsp/DelayEngine.h"
 #include "dsp/DemoToneGenerator.h"
 #include "dsp/ShimmerEngine.h"
+#include "presets/PresetManager.h"
 
 class EasyChorusAudioProcessor : public juce::AudioProcessor
 {
@@ -27,30 +28,49 @@ public:
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 2.0; }
 
-    int getNumPrograms() override { return 1; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram (int) override {}
-    const juce::String getProgramName (int) override { return {}; }
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
     void changeProgramName (int, const juce::String&) override {}
 
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getAPVTS() noexcept { return apvts; }
+    PresetManager& getPresetManager() noexcept { return presetManager; }
+
+    /** Load factory preset by index (also used by in-plugin prev/next/combo). */
+    void loadPreset (int index);
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    /** Effective BPM: host tempo when Sync is on and available, else manual BPM. */
+    float getEffectiveBpm() const;
+    float getCurrentDelayMs() const;
+    bool  isTempoSyncEnabled() const;
+    bool  isDelayMusical() const;
+
 private:
     void updateEnginesFromParameters();
+    float readHostBpm() const;
 
     juce::AudioProcessorValueTreeState apvts;
+    PresetManager     presetManager;
     ChorusEngine      chorusEngine;
     DelayEngine       delayEngine;
     ShimmerEngine     shimmerEngine;
     DemoToneGenerator demoTone;
 
     juce::AudioBuffer<float> dryBuffer;
+    juce::AudioBuffer<float> stageBuffer;
+
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> mixSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> chorusLevelSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> delayLevelSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> shimmerLevelSmoothed;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> masterSmoothed;
+    float lastHostBpm = 120.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EasyChorusAudioProcessor)
 };
