@@ -1,1 +1,1 @@
-file:///tmp/easy-chorus-push/PluginEditor_f75d57d.cpp
+{{file:/home/ubuntu/.cursor/projects/agent/agent-tools/PluginEditor-FULL.cpp}}
